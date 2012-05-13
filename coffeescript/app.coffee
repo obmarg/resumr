@@ -1,8 +1,9 @@
 define [ 'router' ], ( Router ) ->
-  
-  initialize = ->
-    Router.initialize()
+  app = new Backbone.Marionette.Application();
 
-  return
-    initialize: initialize
+  app.addInitializer( (options) ->
+    # TODO: Do something with router
+    # TODO: call backbone history start?
+  )
 
+  return app

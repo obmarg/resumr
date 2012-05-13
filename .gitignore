@@ -1,1 +1,5 @@
 .DS_Store
+
+# Ignore generated .js files
+static/js/*.js
+static/js/models
