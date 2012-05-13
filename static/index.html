@@ -45,8 +45,8 @@
     </div>
 
     <div class="container-fluid">
-
-			<div class='row-fluid'>
+			<div class='row-fluid' id='page'>
+				<!--	
 				<div id='sidebar' class='span2'>	
 					<input 
 						class='span2' 
@@ -60,43 +60,9 @@
 					</select>
 					<button class='btn'>Add Existing Section</button>
 				</div>
-				<div id='content' class='span10'>
-					<div class='section'>
-						<div class='tools'>
-							<i class='icon-edit' title='Edit Section'></i>
-							<i class='icon-chevron-up' title='Move Section Up'></i>
-							<i class='icon-chevron-down' title='Move Section Down'></i>
-							<i class='icon-remove' title='Remove Section'></i>
-						</div>
-						<h1>CV - Graeme Coupar</h1>
-						<p>
-						Flat 100<br />
-						10 Sweet Road<br />
-						EH13 7EP
-						</p>
-						<p>
-						Phone: 011456543<br />
-						Email: gbo@amaze.me.uk<br />
-						</p>
-					</div>
-					<div class='section'>
-						<div class='tools'>
-							<i class='icon-edit'></i>
-							<i class='icon-chevron-up'></i>
-							<i class='icon-chevron-down'></i>
-							<i class='icon-remove'></i>
-						</div>
-						<h2>::Skills::</h2>
-							<ul>
-							<li><b>Programming Languages</b>: C/C++, C#, Python, Perl, PHP, Java, XHTML, CSS, Visual Basic, SQL, XML, and JavaScript.</li>
-							<li><b>OS's</b>: Confident using and administering all recent versions of Windows (2000/XP/Vista,7) and Linux</li>
-							<li><b>APIs</b>: Win32, STL, Direct X, OpenGL, .NET, XNA, SQLite, Android, Django, Flask, SQLAlchemy</li>
-							</ul>
-					</div>
-				</div>
+				-->
 			</div>
       <hr>
-
       <footer>
         <p>&copy; Graeme Coupar</p>
       </footer>
@@ -115,5 +81,44 @@
 <script src='js/libs/require.min.js' data-main='js/main.js'></script>
 <!-- end scripts-->
 
+<!-- Start templates -->
+<script id='section-overview-template' type='text/template'>
+	<div id='sidebar' class='span2'>
+	</div>
+	<div id='content' class='span10'>
+	</div>
+</script>
+<script id='section-item-template' type='text/template'>
+	<div class='section'>
+		<div class='tools'>
+			<i class='icon-edit' title='Edit Section'></i>
+			<i class='icon-chevron-up' title='Move Section Up'></i>
+			<i class='icon-chevron-down' title='Move Section Down'></i>
+			<i class='icon-remove' title='Remove Section'></i>
+		</div>
+		<%= content %>
+	</div>
+</script>
+
+<script id='tempData1' type='text/template'>
+	<h1>CV - Graeme Coupar</h1>
+	<p>
+	Flat 100<br />
+	10 Sweet Road<br />
+	EH13 7EP
+	</p>
+	<p>
+	Phone: 011456543<br />
+	Email: gbo@amaze.me.uk<br />
+	</p>
+</script>
+<script id='tempData2' type='text/template'>
+	<h2>::Skills::</h2>
+	<ul>
+		<li><b>Programming Languages</b>: C/C++, C#, Python, Perl, PHP, Java, XHTML, CSS, Visual Basic, SQL, XML, and JavaScript.</li>
+		<li><b>OS's</b>: Confident using and administering all recent versions of Windows (2000/XP/Vista,7) and Linux</li>
+		<li><b>APIs</b>: Win32, STL, Direct X, OpenGL, .NET, XNA, SQLite, Android, Django, Flask, SQLAlchemy</li>
+	</ul>
+</script>
 </body>
 </html>

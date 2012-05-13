@@ -3,6 +3,9 @@
 # Ignore generated .js files
 static/js/*.js
 static/js/models
+static/js/collections
+static/js/layouts
+static/js/views
 
 # Ignore generated style.css
 static/less/style.css
