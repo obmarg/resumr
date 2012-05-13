@@ -21,4 +21,8 @@ define(
           collection: @sectionList 
         )
         layout.content.show( sectionListView )
+
+      sectionEdit: ->
+        # TODO: Run edit view 
+        layout = 0 
 )
