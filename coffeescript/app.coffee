@@ -1,8 +1,17 @@
-define [ 'router' ], ( Router ) ->
-  
-  initialize = ->
-    Router.initialize()
+define( 
+  [ 'router', 'controller' ], 
+  ( Router, Controller ) ->
+    app = new Backbone.Marionette.Application()
 
-  return
-    initialize: initialize
+    app.addInitializer( (options) ->
+      controller = new Controller(this.page)
+      this.router = new Router( controller: controller )
+      Backbone.history.start()
+    )
 
+    app.addRegions(
+      page: '#page'
+    )
+    
+    return app
+)

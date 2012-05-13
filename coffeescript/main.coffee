@@ -1,9 +1,11 @@
 require.config
-  baseUrl: "/static/"
+  baseUrl: "js/"
   paths:
     Mustache: "libs/mustache/mustache-wrapper"
 
-require [ 
-  "app",
-], (App) ->
-  App.initialize()
+require [ 'app' ], ( app ) ->
+  options = {
+    # Something
+  }
+
+  app.start( options )
