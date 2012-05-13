@@ -12,9 +12,40 @@ body {
    Author:
    ========================================================================== */
 
+.rounded-corners (@radius: 5px) {
+  border-radius: @radius;
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+}
 
+.section {
+    border: 1px solid white;
+    .rounded-corners;
+    padding: 2px;
 
+    margin-bottom: 3px;
+    
+    -webkit-transition: border-color 1s;
+}
 
+.section:hover {
+    border: 1px solid black;
+    .rounded-corners;
 
+    -webkit-transition: border-color 1s;
+}
 
+.section .tools {
+    float:right;
+    opacity:0;
+    filter:alpha(opacity=0);
 
+    -webkit-transition: opacity 1s;
+}
+
+.section:hover .tools {
+    opacity:0.8;
+    filter:alpha(opacity=80);
+
+    -webkit-transition: opacity 1s;
+}

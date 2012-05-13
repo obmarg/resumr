@@ -39,8 +39,8 @@
           <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="#">Overall Layout</a></li>
-              <li><a href="#about">Sections</a></li>
-              <li><a href="#contact">Stylesheet</a></li>
+              <li><a href="#css">Stylesheet</a></li>
+              <li><a href="#render">Render</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -50,8 +50,53 @@
     <div class="container-fluid">
 
 			<div class='row-fluid'>
-				<div id='sidebar' class='span2'>Sidebar</div>
-				<div id='content' class='span10'>Content</div>
+				<div id='sidebar' class='span2'>	
+					<input 
+						class='span2' 
+						type='text' 
+						placeholder='New Section Name'>
+					<button class='btn'>Add New Section</button>
+					<p>&nbsp;</p>
+					<select class='span2'>
+						<option value='Test'>Test</option>
+						<option value='Something'>Something</option>
+					</select>
+					<button class='btn'>Add Existing Section</button>
+				</div>
+				<div id='content' class='span10'>
+					<div class='section'>
+						<div class='tools'>
+							<i class='icon-edit' title='Edit Section'></i>
+							<i class='icon-chevron-up' title='Move Section Up'></i>
+							<i class='icon-chevron-down' title='Move Section Down'></i>
+							<i class='icon-remove' title='Remove Section'></i>
+						</div>
+						<h1>CV - Graeme Coupar</h1>
+						<p>
+						Flat 100<br />
+						10 Sweet Road<br />
+						EH13 7EP
+						</p>
+						<p>
+						Phone: 011456543<br />
+						Email: gbo@amaze.me.uk<br />
+						</p>
+					</div>
+					<div class='section'>
+						<div class='tools'>
+							<i class='icon-edit'></i>
+							<i class='icon-chevron-up'></i>
+							<i class='icon-chevron-down'></i>
+							<i class='icon-remove'></i>
+						</div>
+						<h2>::Skills::</h2>
+							<ul>
+							<li><b>Programming Languages</b>: C/C++, C#, Python, Perl, PHP, Java, XHTML, CSS, Visual Basic, SQL, XML, and JavaScript.</li>
+							<li><b>OS's</b>: Confident using and administering all recent versions of Windows (2000/XP/Vista,7) and Linux</li>
+							<li><b>APIs</b>: Win32, STL, Direct X, OpenGL, .NET, XNA, SQLite, Android, Django, Flask, SQLAlchemy</li>
+							</ul>
+					</div>
+				</div>
 			</div>
       <hr>
 
@@ -68,8 +113,6 @@
 <!-- TODO: Might want to use the dev versions of these at some point -->
 <script src="js/libs/underscore-min.js"></script>
 <script src="js/libs/backbone-min.js"></script>
-<script src="js/libs/knockback.min.js"></script>
-<script src="js/libs/knockout-2.0.0.js"></script>
 
 <script src="js/script.js"></script>
 <!-- end scripts-->
