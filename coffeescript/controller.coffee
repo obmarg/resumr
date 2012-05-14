@@ -22,16 +22,13 @@ define(
         )
         layout.content.show( sectionListView )
 
-      sectionEdit: ->
-        layout = new SectionEditor()
-        layout.render()
-        binder = _.extend({}, Backbone.Marionette.BindTo )
-        binder.bindTo( 
-          @page, 'view:show', ->
-            layout.createEditor()
-            binder.unbindAll()
+      sectionEdit: (name) ->
+        section = @sectionList.find( (item) -> 
+          item.cid == name
         )
+        layout = new SectionEditor( model: section )
         @page.show( layout )
+        layout.createEditor()
 
     return Controller
 )
