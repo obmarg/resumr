@@ -1,7 +1,7 @@
 define( 
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView ) ->
-    class Controller
+  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor' ],
+  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor ) ->
+    class Controller 
       constructor: (@page) ->
         # Load Temporary test data
         content1 = $( '#tempData1' ).html()
@@ -22,7 +22,13 @@ define(
         )
         layout.content.show( sectionListView )
 
-      sectionEdit: ->
-        # TODO: Run edit view 
-        layout = 0 
+      sectionEdit: (name) ->
+        section = @sectionList.find( (item) -> 
+          item.cid == name
+        )
+        layout = new SectionEditor( model: section )
+        @page.show( layout )
+        layout.createEditor()
+
+    return Controller
 )
