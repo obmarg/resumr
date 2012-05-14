@@ -1,7 +1,7 @@
 define( 
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView ) ->
-    class Controller
+  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor' ],
+  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor ) ->
+    class Controller 
       constructor: (@page) ->
         # Load Temporary test data
         content1 = $( '#tempData1' ).html()
@@ -23,6 +23,15 @@ define(
         layout.content.show( sectionListView )
 
       sectionEdit: ->
-        # TODO: Run edit view 
-        layout = 0 
+        layout = new SectionEditor()
+        layout.render()
+        binder = _.extend({}, Backbone.Marionette.BindTo )
+        binder.bindTo( 
+          @page, 'view:show', ->
+            layout.createEditor()
+            binder.unbindAll()
+        )
+        @page.show( layout )
+
+    return Controller
 )
