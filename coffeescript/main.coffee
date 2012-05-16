@@ -1,5 +1,5 @@
 require.config
-  baseUrl: "js/"
+  baseUrl: "static/js/"
   paths:
     Mustache: "libs/mustache/mustache-wrapper"
     Pagedown: "libs/Pagedown/pagedown-wrapper"
