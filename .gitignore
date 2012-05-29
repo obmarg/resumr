@@ -1,5 +1,9 @@
 .DS_Store
 
+# Ignore compiled python files
+*.pyc
+*.pyd
+
 # Ignore generated .js files
 static/js/*.js
 static/js/models
@@ -9,3 +13,5 @@ static/js/views
 
 # Ignore generated style.css
 static/less/style.css
+
+data/
