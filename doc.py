@@ -73,6 +73,7 @@ class Document(object):
     Class representing a document, interacts with the git 
     database
     '''
+    MASTER_REF = 'refs/heads/master'
     SECTION_REF_PREFIX = 'refs/heads/sections/'
 
     def __init__( self, name, create=False ):
@@ -87,8 +88,19 @@ class Document(object):
         if create:
             # Create a bare repository
             self.repo = init_repository( targetDir, True )
+            self._CreateMasterBranch()
         else:
             self.repo = Repository( targetDir )
+
+    def _CreateMasterBranch( self ):
+        '''
+        Creates the master branch on the repo w/ default file.
+        For now this is just a file named layout
+        '''
+        commitId = CommitBlob( 
+                self.repo, '', 'layout', 'Initial commit' 
+                )
+        self.repo.create_reference( self.MASTER_REF, commitId )
 
     @classmethod
     def _IsSectionRef( cls, refName ):
@@ -134,16 +146,21 @@ class Document(object):
                 for name, ref in self._SectionRefs()
                 )
        
-    def AddSection( self, name ):
+    def AddSection( self, name, content='' ):
         '''
         Creates a new section
         
+        Args:
+            name        The name of the section
+            content     The optional initial content of the 
+                        section
+
         Returns:
             The new Section object
         '''
         commitId = CommitBlob(
                 self.repo,
-                '',
+                content,
                 name,
                 'Created section ' + name
                 )
