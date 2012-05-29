@@ -1,8 +1,10 @@
 
+import os
 import unittest
 import mox
 import pygit2
 import gitutils
+import doc
 from collections import namedtuple
 
 class BaseTest(unittest.TestCase):
@@ -111,5 +113,137 @@ class GitUtilsTest(BaseTest):
                 )
 
         self.mox.VerifyAll()
+        self.assertEqual( 'commitId', commitId )
 
+class DocumentTests(BaseTest):
+    '''
+    Tests the document class
+    '''
 
+    def setUp( self ):
+        super( DocumentTests, self ).setUp()
+        self.mox.StubOutClassWithMocks(doc, 'Section')
+        self.mox.StubOutClassWithMocks(doc, 'Repository')
+        self.mox.StubOutWithMock(doc, 'init_repository')
+        self.mox.StubOutWithMock(doc, 'CommitBlob')
+        self.origRootPath = doc.rootPath
+        doc.rootPath = 'testPath'
+
+    def tearDown( self ):
+        super( DocumentTests, self ).tearDown()
+        doc.rootPath = self.origRootPath
+
+    def testCreate( self ):
+        '''
+        Tests creation of document
+        '''
+
+        # Create a mock repo
+        mockRepo = self.mox.CreateMock( pygit2.Repository )
+        
+        # Set up expectations.  First init repository
+        doc.init_repository( 
+                os.path.join( 'testPath', 'name.git' ), True
+                ).AndReturn( mockRepo )
+        # Then original commit & create master reference
+        doc.CommitBlob( 
+                mockRepo, '', 'layout', 'Initial commit'
+                ).AndReturn( 'commitId' )
+        mockRepo.create_reference( 'refs/heads/master', 'commitId' )
+
+        # Now, run the test
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name', create=True )
+
+        self.mox.VerifyAll()
+
+    def testConstructNoCreate( self ):
+        '''
+        Tests construction without create
+        '''
+
+        mockRepo = doc.Repository( 
+                os.path.join( 'testPath', 'name.git' )
+                )
+
+        self.mox.ReplayAll()
+        d = doc.Document( 'name' )
+
+        self.mox.VerifyAll()
+
+    def testAddSection( self ):
+        '''
+        Tests adding a section
+        '''
+
+        mockRepo = doc.Repository( 
+                os.path.join( 'testPath', 'name.git' )
+                )
+
+        doc.CommitBlob( 
+                mockRepo, 'content', 'sectionName', 
+                'Created section sectionName'
+                ).AndReturn( 'commitId' )
+
+        mockRefType = namedtuple( 'mockRef', 'oid' )
+        mockRef = mockRefType( 'oid' )
+
+        mockRepo.create_reference(
+                'refs/heads/sections/sectionName',
+                'commitId'
+                ).AndReturn( mockRef )
+        mockRepo[ 'oid' ].AndReturn( 'commit' )
+
+        mockSection = doc.Section( 
+                'sectionName', 'commit', mockRepo 
+                )
+
+        self.mox.ReplayAll()
+        d = doc.Document( 'name' )
+
+        s = d.AddSection( 'sectionName', 'content' )
+
+        self.mox.VerifyAll()
+        
+        self.assertEqual( mockSection, s )
+
+    def testListSections( self ):
+        '''
+        Tests the Sections function
+        '''
+        mockRepo = doc.Repository( 
+                os.path.join( 'testPath', 'name.git' )
+                )
+
+        mockRefType = namedtuple( 'mockRef', 'oid' )
+        mockRef = mockRefType( 'oid' )
+        mockRef2 = mockRefType( 'oid2' )
+
+        mockRepo.listall_references().AndReturn( [ 
+            'refs/heads/sections/section',
+            'refs/heads/sections/anotherSection',
+            'refs/heads/master'
+            ] )
+
+        mockRepo.lookup_reference( 
+                'refs/heads/sections/section' 
+                ).AndReturn( mockRef )
+        mockRepo[ 'oid' ].AndReturn( 'commit1' )
+        mockSection1 = doc.Section( 'section', 'commit1', mockRepo )
+
+        mockRepo.lookup_reference(
+                'refs/heads/sections/anotherSection'
+                ).AndReturn( mockRef2 )
+        mockRepo[ 'oid2' ].AndReturn( 'commit2' )
+        mockSection2 = doc.Section( 'anotherSection', 'commit2', mockRepo )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+
+        sections = list( d.Sections() )
+
+        self.assertEqual( sections, [ mockSection1, mockSection2 ] )
+
+        self.mox.VerifyAll()
