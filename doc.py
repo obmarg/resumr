@@ -33,6 +33,23 @@ class Section(object):
         blob = self.repo[ oid ]
         return blob.data
 
+    def ContentHistory( self ):
+        '''
+        Generator function that returns the history of this section
+
+        This niavely assumes there's only one parent commit
+        on each commit, which will do for now.
+        '''
+        current = self.headCommit
+        while True:
+            oid = current.tree[ 0 ].oid
+            yield self.repo[ oid ].data
+            if current.parents:
+                # current has at least one parent
+                current = current.parents[ 0 ]
+            else:
+                break
+            
     def SetContent( self, newContent ):
         '''
         Adds a new version of the section
