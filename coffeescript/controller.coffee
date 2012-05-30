@@ -10,7 +10,9 @@ define(
         section1 = new Section( content: content1 )
         section2 = new Section( content: content2 )
 
-        @sectionList = new SectionList([ section1, section2 ])
+        #@sectionList = new SectionList([ section1, section2 ])
+        @sectionList = new SectionList()
+        @sectionList.fetch()
 
       sectionOverview: ->
         layout = new SectionOverviewLayout()
