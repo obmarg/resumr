@@ -10,9 +10,12 @@ define(
         section1 = new Section( content: content1 )
         section2 = new Section( content: content2 )
 
-        #@sectionList = new SectionList([ section1, section2 ])
+        @sectionFetch = $.Deferred()
         @sectionList = new SectionList()
-        @sectionList.fetch()
+        @sectionList.fetch(
+          success: => @sectionFetch.resolve()
+          failure: => @sectionFetch.reject()
+        )
 
       sectionOverview: ->
         layout = new SectionOverviewLayout()
@@ -25,12 +28,16 @@ define(
         layout.content.show( sectionListView )
 
       sectionEdit: (name) ->
-        section = @sectionList.find( (item) -> 
-          item.cid == name
+        @sectionFetch.then( =>
+          # After the sections have been fetched,
+          # set up the view
+          section = @sectionList.find( (item) -> 
+            item.get( 'name' ) == name
+          )
+          layout = new SectionEditor( model: section )
+          @page.show( layout )
+          layout.createEditor()
         )
-        layout = new SectionEditor( model: section )
-        @page.show( layout )
-        layout.createEditor()
-
+       
     return Controller
 )

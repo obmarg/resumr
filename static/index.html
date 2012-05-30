@@ -89,13 +89,24 @@
 	</div>
 </script>
 <script id='section-editor-template' type='text/template'>
-	<div id='editor' class='span6'>
-		<div id='wmd-button-bar'></div>
-		<textarea id='wmd-input' class='span6'><%= content %></textarea>
+	<div id='row-fluid'>
+		<h3 class='span12'>
+			Editing Section "<%= name %>" &nbsp;
+			<button id='saveButton' class='btn btn-primary'>
+				<i class='icon-ok-sign icon-white'></i> Save
+			</button>
+			<button id='cancelButton' class='btn btn-danger'>Cancel</button>
+		</h3>
 	</div>
-	<div id='preview' class='span6'>
-		<div class='wmd-button-row'>&nbsp;</div>
-		<div id='wmd-preview'>
+	<div id='row-fluid'>
+		<div id='editor' class='span6'>
+			<div id='wmd-button-bar'></div>
+			<textarea id='wmd-input' class='span6'><%= content %></textarea>
+		</div>
+		<div id='preview' class='span6'>
+			<div class='wmd-button-row'>&nbsp;</div>
+			<div id='wmd-preview'>
+			</div>
 		</div>
 	</div>
 </script>
