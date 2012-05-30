@@ -5,6 +5,7 @@ import mox
 import pygit2
 import gitutils
 import doc
+import section
 from collections import namedtuple
 
 class BaseTest(unittest.TestCase):
@@ -261,7 +262,7 @@ class SectionTests(BaseTest):
 
     def setUp( self ):
         super( SectionTests, self ).setUp()
-        self.mox.StubOutWithMock(doc, 'CommitBlob')
+        self.mox.StubOutWithMock(section, 'CommitBlob')
 
     def testCurrentContent( self ):
         '''
@@ -284,8 +285,8 @@ class SectionTests(BaseTest):
 
         self.mox.ReplayAll()
 
-        section = doc.Section( 'name', mockHead, mockRepo )
-        c =  section.CurrentContent()
+        s = section.Section( 'name', mockHead, mockRepo )
+        c = s.CurrentContent()
 
         self.mox.VerifyAll()
         self.assertEqual( 'blobData', c )
@@ -297,7 +298,7 @@ class SectionTests(BaseTest):
         mockHead = self.mox.CreateMock( pygit2.Commit )
         mockRepo = self.mox.CreateMock( pygit2.Repository )
 
-        doc.CommitBlob(
+        section.CommitBlob(
                 mockRepo, 'content', 'name', 'Updating section',
                 [ mockHead ], 'refs/heads/sections/name'
                 ).AndReturn( 'newId' )
@@ -306,9 +307,9 @@ class SectionTests(BaseTest):
 
         self.mox.ReplayAll()
 
-        section = doc.Section( 'name', mockHead, mockRepo )
-        section.SetContent( 'content' )
+        s= section.Section( 'name', mockHead, mockRepo )
+        s.SetContent( 'content' )
 
         self.mox.VerifyAll()
-        self.assertEqual( section.headCommit, 'newCommit' )
+        self.assertEqual( s.headCommit, 'newCommit' )
  
