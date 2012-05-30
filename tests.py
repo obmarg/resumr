@@ -247,3 +247,68 @@ class DocumentTests(BaseTest):
         self.assertEqual( sections, [ mockSection1, mockSection2 ] )
 
         self.mox.VerifyAll()
+
+
+class SectionTests(BaseTest):
+    '''
+    Tests the section class
+   
+    Currently this only tests the 
+    CurrentContent & SetContent functions
+
+    TODO: Write the rest of the tests
+    '''
+
+    def setUp( self ):
+        super( SectionTests, self ).setUp()
+        self.mox.StubOutWithMock(doc, 'CommitBlob')
+
+    def testCurrentContent( self ):
+        '''
+        Tests the CurrentContent function
+        '''
+        mockHead = self.mox.CreateMock( pygit2.Commit )
+        mockRepo = self.mox.CreateMock( pygit2.Repository )
+
+        mockCommitType = namedtuple( 'mockTree', [ 'oid' ] )
+        mockCommit = mockCommitType( 'blobOid' )
+
+        mockHead.tree = self.mox.CreateMockAnything()
+
+        mockHead.tree[ 0 ].AndReturn( mockCommit )
+        
+        mockBlobType = namedtuple( 'mockBlob', [ 'data' ] )
+        mockBlob = mockBlobType( 'blobData' )
+
+        mockRepo[ 'blobOid' ].AndReturn( mockBlob )
+
+        self.mox.ReplayAll()
+
+        section = doc.Section( 'name', mockHead, mockRepo )
+        c =  section.CurrentContent()
+
+        self.mox.VerifyAll()
+        self.assertEqual( 'blobData', c )
+
+    def testSetContent( self ):
+        '''
+        Tests the SetContent function
+        '''
+        mockHead = self.mox.CreateMock( pygit2.Commit )
+        mockRepo = self.mox.CreateMock( pygit2.Repository )
+
+        doc.CommitBlob(
+                mockRepo, 'content', 'name', 'Updating section',
+                [ mockHead ], 'refs/heads/sections/name'
+                ).AndReturn( 'newId' )
+
+        mockRepo[ 'newId' ].AndReturn( 'newCommit' )
+
+        self.mox.ReplayAll()
+
+        section = doc.Section( 'name', mockHead, mockRepo )
+        section.SetContent( 'content' )
+
+        self.mox.VerifyAll()
+        self.assertEqual( section.headCommit, 'newCommit' )
+ 
