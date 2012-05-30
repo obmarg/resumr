@@ -19,8 +19,9 @@ def ListSections():
     d = GetDoc()
     sections = [ { 
                 'name' : s.name, 
+                'pos' : i,
                 'content' : s.CurrentContent() 
-                } for s d.Sections() ]
+                } for i, s in enumerate( d.Sections() ) ]
     # TODO: Maybe make this return an object
     #       Seem to remember some security warning for
     #       returning lists
