@@ -1,6 +1,6 @@
 import json
-from flask import Flask, render_template
-from db import Document
+from flask import Flask, render_template, abort, request, g
+from db import Document, SectionNotFound
 
 app = Flask(__name__)
 
@@ -26,6 +26,22 @@ def ListSections():
     #       Seem to remember some security warning for
     #       returning lists
     return json.dumps( sections )
+
+@app.route('/api/sections/<name>', methods=['PUT'])
+def UpdateSection(name):
+    '''
+    Updates a sections contents
+
+    Args:
+        name    The name of the section to find
+    '''
+    d = GetDoc()
+    try:
+        section = d.FindSection( name )
+        section.SetContent( request.json[ 'content' ] )
+    except SectionNotFound:
+        abort(404)
+    return "OK"
 
 if __name__ == "__main__":
     app.run()

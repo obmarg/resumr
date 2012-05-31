@@ -19,7 +19,7 @@ define(
         @editor.run()
 
       doSave: ->
-        @model.set( 'content', $( '#wmd-input' ).val() )
+        @model.save( content: $( '#wmd-input' ).val() )
         # TODO: Move back to index?
 
       doCancel: ->
