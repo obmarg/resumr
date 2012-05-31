@@ -163,13 +163,33 @@ class DocumentTests(BaseTest):
         '''
         Tests construction without create
         '''
-
         mockRepo = doc.Repository( 
                 os.path.join( 'testPath', 'name.git' )
                 )
 
         self.mox.ReplayAll()
         d = doc.Document( 'name' )
+
+        self.mox.VerifyAll()
+
+    def testNoRepo( self ):
+        '''
+        Tests that the correct exception is thrown
+        if a repo doesn't exist
+        '''
+        self.mox.UnsetStubs()
+        self.mox.StubOutWithMock(doc, 'Repository')
+
+        doc.Repository( 
+                os.path.join( 'testPath', 'name.git' ) 
+                ).AndRaise(KeyError)
+
+        self.mox.ReplayAll()
+
+        self.assertRaises( 
+                doc.RepoNotFound,
+                lambda: doc.Document( 'name' )
+                )
 
         self.mox.VerifyAll()
 
@@ -246,6 +266,56 @@ class DocumentTests(BaseTest):
         sections = list( d.Sections() )
 
         self.assertEqual( sections, [ mockSection1, mockSection2 ] )
+
+        self.mox.VerifyAll()
+
+    def testFindSection( self ):
+        '''
+        Tests the find section function
+        '''
+        mockRepo = doc.Repository( 
+                os.path.join( 'testPath', 'name.git' )
+                )
+
+        mockRefType = namedtuple( 'mockRef', 'oid' )
+        mockRef = mockRefType( 'oid' )
+
+        mockRepo.lookup_reference( 
+                'refs/heads/sections/section'
+                ).AndReturn( mockRef )
+
+        mockRepo[ 'oid' ].AndReturn( 'commit' )
+
+        mockSection = doc.Section( 'section', 'commit', mockRepo )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+        s = d.FindSection( 'section' )  
+
+        self.mox.VerifyAll()
+        self.assertEqual( mockSection, s )
+
+    def testFindMissingSection( self ):
+        '''
+        Tests finding a missing section
+        '''
+        mockRepo = doc.Repository( 
+                os.path.join( 'testPath', 'name.git' )
+                )
+
+        mockRepo.lookup_reference( 
+                'refs/heads/sections/section'
+                ).AndRaise( KeyError )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+
+        self.assertRaises(
+                doc.SectionNotFound,
+                lambda: d.FindSection( 'section' )
+                )
 
         self.mox.VerifyAll()
 

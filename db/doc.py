@@ -5,6 +5,7 @@ from pygit2 import Repository, init_repository
 from gitutils import CommitBlob
 from .section import Section
 from .constants import MASTER_REF, SECTION_REF_PREFIX
+from .errors import SectionNotFound, RepoNotFound
 
 rootPath = 'data'
 
@@ -21,6 +22,8 @@ class Document(object):
         Args:
             name:   The name of the document
             create: If true, will create a document
+        Exceptions:
+            RepoNotFound if repository isn't found
         '''
         targetDir = os.path.join( rootPath, name + '.git' )
         if create:
@@ -28,7 +31,10 @@ class Document(object):
             self.repo = init_repository( targetDir, True )
             self._CreateMasterBranch()
         else:
-            self.repo = Repository( targetDir )
+            try:
+                self.repo = Repository( targetDir )
+            except KeyError:
+                raise RepoNotFound()
 
     def _CreateMasterBranch( self ):
         '''
@@ -83,6 +89,25 @@ class Document(object):
                 Section( name, self.repo[ref.oid], self.repo ) 
                 for name, ref in self._SectionRefs()
                 )
+
+    def FindSection( self, name ):
+        '''
+        Finds a section by name
+
+        Args:
+            name    The name of the section to find
+        Returns:
+            The section if found
+        Exceptions:
+            SectionNotFound if section not found
+        '''
+        try:
+            ref = self.repo.lookup_reference( 
+                    SECTION_REF_PREFIX + name 
+                    )
+        except KeyError:
+            raise SectionNotFound()
+        return Section( name, self.repo[ref.oid], self.repo )
        
     def AddSection( self, name, content='' ):
         '''
