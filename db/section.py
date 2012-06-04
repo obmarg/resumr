@@ -86,3 +86,4 @@ class Section(object):
         '''
         index = SectionIndex( self.repo )
         index.SetSectionPosition( self.name, newPosition )
+        index.Save( self.repo )

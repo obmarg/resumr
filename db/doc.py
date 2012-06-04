@@ -144,6 +144,8 @@ class Document(object):
         Returns:
             The new Section object
         '''
+        # TODO: Should probably make
+        #       sure no such section exists
         commitId = CommitBlob(
                 self.repo,
                 content,
@@ -154,4 +156,7 @@ class Document(object):
                 SECTION_REF_PREFIX + name,
                 commitId
                 )
+        index = SectionIndex(self.repo)
+        index.AddSection( name )
+        index.Save( self.repo )
         return Section( name, self.repo[ ref.oid ], self.repo )

@@ -1,7 +1,7 @@
 
 import re
 from collections import namedtuple
-from .constants import MASTER_REF
+from .constants import MASTER_REF, SECTION_INDEX_FILENAME
 from .errors import MasterNotFound, BrokenMaster, SectionNotFound
 from .gitutils import CommitBlob
 
@@ -28,19 +28,20 @@ class SectionIndex(object):
             MasterNotFound  If master branch not found
             BrokenMaster    If master data couldn't be read
         '''
+        self.sections = []
         try:
             commit = self._lookupHead( repo )
-            indexOid = commit.tree['index'].oid
+            indexOid = commit.tree[ SECTION_INDEX_FILENAME ].oid
             data = repo[indexOid].data
         except KeyError:
-            return BrokenMaster()
+            raise BrokenMaster()
         self.ProcessData( data )
 
     @staticmethod
     def _lookupHead( repo ):
         # Returns the head commit object (or excepts)
         try:
-            return repo[ repo.lookup_reference( MASTER_REF ) ]
+            return repo[ repo.lookup_reference( MASTER_REF ).oid ]
         except KeyError:
             raise MasterNotFound
 
@@ -49,6 +50,8 @@ class SectionIndex(object):
         Process data into the sections list
         '''
         self.sections = []
+        if not data:
+            return
         for line in data.split('\n'):
             m = self._lineRegExp.match(line)
             if not m:
@@ -61,6 +64,16 @@ class SectionIndex(object):
         Returns list of the current sections
         '''
         return self.sections
+
+    def AddSection( self, name ):
+        '''
+        Adds a section.
+        New sections always go on the end of the list
+
+        Args:
+            name    The name for the new section
+        '''
+        self.sections.append( SectionIndexEntry( name ) )
 
     def GetSectionPosition( self, sectionName ):
         '''
@@ -97,7 +110,7 @@ class SectionIndex(object):
             raise ValueError
         currentPosition = self.GetSectionPosition( sectionName )
         if currentPosition != newPosition:
-            return self._DoSetSectionPosition( currentPosition, newPosition )
+            self._DoSetSectionPosition( currentPosition, newPosition )
 
     def _DoSetSectionPosition( self, currentPosition, newPosition ):
         '''
@@ -129,9 +142,11 @@ class SectionIndex(object):
         Args:
             repo    The repository to save to
         '''
+        data = self.GetIndexString()
         CommitBlob(
                 repo,
-                self.GetIndexString(),
+                data,
+                SECTION_INDEX_FILENAME,
                 'saving section index',
                 [ self._lookupHead( repo ) ],
                 MASTER_REF

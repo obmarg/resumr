@@ -233,6 +233,7 @@ class DocumentTests(BaseTest):
         '''
         Tests adding a section
         '''
+        self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
         mockRepo = self._createMockRepo()
 
         doc.CommitBlob(
@@ -246,6 +247,9 @@ class DocumentTests(BaseTest):
                 'refs/heads/sections/sectionName',
                 'commitId'
                 ).AndReturn( mockRef )
+        mockSectionIndex = doc.SectionIndex( mockRepo )
+        mockSectionIndex.AddSection( 'sectionName' )
+        mockSectionIndex.Save( mockRepo )
         mockRepo[ 'oid' ].AndReturn( 'commit' )
 
         mockSection = doc.Section(
@@ -464,6 +468,7 @@ class SectionTests(BaseTest):
         mockIndex = section.SectionIndex( 'repo' )
 
         mockIndex.SetSectionPosition( 'sectionName', 100 )
+        mockIndex.Save( 'repo' )
         self.mox.ReplayAll()
 
         s = section.Section( 'sectionName', 'commit', 'repo' )
@@ -485,7 +490,7 @@ class SectionIndexTests(BaseTest):
 
         # Set up our fake commit
         testCommit = TestCommitType(
-                { 'index' : TestObjectType( 'indexOid' ) },
+                { SECTION_INDEX_FILENAME : TestObjectType( 'indexOid' ) },
                 'unused'
                 )
         testBlob = TestBlobType( 'someData' )
@@ -493,8 +498,9 @@ class SectionIndexTests(BaseTest):
         mockRepo = self.mox.CreateMock( pygit2.Repository )
         self.mox.StubOutWithMock( sectionindex.SectionIndex, 'ProcessData' )
 
-        mockRepo.lookup_reference( MASTER_REF ).AndReturn( 'ref' )
-        mockRepo[ 'ref' ].AndReturn( testCommit )
+        mockRef = TestObjectType( 'mockOid' )
+        mockRepo.lookup_reference( MASTER_REF ).AndReturn( mockRef )
+        mockRepo[ 'mockOid' ].AndReturn( testCommit )
         mockRepo[ 'indexOid' ].AndReturn( testBlob )
 
         sectionindex.SectionIndex.ProcessData( testBlob.data )
@@ -504,6 +510,21 @@ class SectionIndexTests(BaseTest):
         sectionindex.SectionIndex( mockRepo )
 
         self.mox.VerifyAll()
+
+    def testProcessEmptyData( self ):
+        '''
+        Tests processing empty data
+        '''
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        self.mox.StubOutWithMock( sectionindex, 'SectionIndexEntry' )
+        self.mox.ReplayAll()
+
+        sectionIndex = sectionindex.SectionIndex()
+        sectionIndex.ProcessData( '' )
+
+        self.mox.VerifyAll()
+        self.assertEqual( [], sectionIndex.CurrentSections() )
 
     def testProcessAndCurrentSections( self ):
         '''
@@ -529,6 +550,27 @@ class SectionIndexTests(BaseTest):
 
         expectedData = [ 'headerLine', 'middleLine', 'footerLine' ]
         self.assertEqual( expectedData, s.CurrentSections() )
+
+    def testAddSection( self ):
+        ''' Tests add section '''
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        sectionData = 'header\nmiddle\nfooter'
+
+        # Set up our section index
+        index = sectionindex.SectionIndex()
+        index.ProcessData( sectionData )
+
+        self.mox.StubOutWithMock( sectionindex, 'SectionIndexEntry' )
+        sectionindex.SectionIndexEntry( 'postFooter' ).AndReturn( 'string' )
+        self.mox.ReplayAll()
+
+        index.AddSection( 'postFooter' )
+        sections = index.CurrentSections()
+        self.assertEqual( 4, len( sections ) )
+        self.assertEqual( 'string', sections[ 3 ] )
+
+        self.mox.VerifyAll()
 
     def testGetSectionPosition( self ):
         '''
@@ -634,12 +676,14 @@ class SectionIndexTests(BaseTest):
 
         sectionindex.SectionIndex.GetIndexString().AndReturn( 'indexString' )
 
-        mockRepo.lookup_reference( MASTER_REF ).AndReturn( 'master' )
-        mockRepo[ 'master' ].AndReturn( 'commitObject' )
+        mockRef = TestObjectType( 'mockOid' )
+        mockRepo.lookup_reference( MASTER_REF ).AndReturn( mockRef )
+        mockRepo[ 'mockOid' ].AndReturn( 'commitObject' )
 
         sectionindex.CommitBlob(
                 mockRepo,
                 'indexString',
+                SECTION_INDEX_FILENAME,
                 'saving section index',
                 [ 'commitObject' ],
                 MASTER_REF
