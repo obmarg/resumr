@@ -75,3 +75,14 @@ class Section(object):
         index = SectionIndex(self.repo)
         return index.GetSectionPosition( self.name )
 
+    def SetPosition( self, newPosition ):
+        '''
+        Sets the position of the section
+
+        Args:
+            newPosition     The new position of the section
+        Throws:
+            SectionNotFound error if the section isn't found in the index
+        '''
+        index = SectionIndex( self.repo )
+        index.SetSectionPosition( self.name, newPosition )

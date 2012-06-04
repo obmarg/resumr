@@ -451,6 +451,22 @@ class SectionTests(BaseTest):
 
         self.mox.VerifyAll()
 
+    def testSetPosition( self ):
+        '''
+        Tests the SetPosition function
+        '''
+        self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
+        mockIndex = section.SectionIndex( 'repo' )
+
+        mockIndex.SetSectionPosition( 'sectionName', 100 )
+        self.mox.ReplayAll()
+
+        s = section.Section( 'sectionName', 'commit', 'repo' )
+
+        s.SetPosition( 100 )
+
+        self.mox.VerifyAll()
+
 
 class SectionIndexTests(BaseTest):
     '''
@@ -529,3 +545,78 @@ class SectionIndexTests(BaseTest):
                 sectionindex.SectionNotFound,
                 lambda: index.GetSectionPosition( 'missing' )
                 )
+
+    def testSetSectionPosition( self ):
+        '''
+        Tests SetSectionPosition
+        '''
+
+        def NumListToEntries( lst ):
+            # Utility function to create Entry list
+            return [
+                    sectionindex.SectionIndexEntry( str( name ) )
+                    for name in lst
+                    ]
+
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        sectionData = '0\n1\n2\n3\n4'
+
+        # Set up our section index
+        index = sectionindex.SectionIndex()
+        index.ProcessData( sectionData )
+
+        # Now start testing.  First move zero to zero (a no-op)
+        index.SetSectionPosition( '0', 0 )
+        self.assertEqual(
+                NumListToEntries( [ 0, 1, 2, 3, 4 ] ),
+                index.CurrentSections()
+                )
+
+        # Now move 4 to 0
+        index.SetSectionPosition( '4', 0 )
+        self.assertEqual(
+                NumListToEntries( [ 4, 0, 1, 2, 3 ] ),
+                index.CurrentSections()
+                )
+
+        # Now move 0 to 3
+        index.SetSectionPosition( '0', 3 )
+        self.assertEqual(
+                NumListToEntries( [ 4, 1, 2, 0, 3 ] ),
+                index.CurrentSections()
+                )
+
+        # Now move 2 to 4
+        index.SetSectionPosition( '2', 4 )
+        self.assertEqual(
+                NumListToEntries( [ 4, 1, 0, 3, 2 ] ),
+                index.CurrentSections()
+                )
+
+        # Now test some too big/small numbers
+        # Now move 4 to 10
+        index.SetSectionPosition( '4', 10 )
+        self.assertEqual(
+                NumListToEntries( [ 1, 0, 3, 2, 4 ] ),
+                index.CurrentSections()
+                )
+
+        # Check passing in negative numbers raises
+        self.assertRaises(
+                ValueError,
+                lambda: index.SetSectionPosition( '1', -1 )
+                )
+
+        # Check section not found is raised
+        self.assertRaises(
+                sectionindex.SectionNotFound,
+                lambda: index.SetSectionPosition( 'none', 10 )
+                )
+
+        # Check that our list is still the same as last time
+        self.assertEqual(
+                NumListToEntries( [ 1, 0, 3, 2, 4 ] ),
+                index.CurrentSections()
+                )
+

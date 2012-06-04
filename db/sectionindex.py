@@ -79,3 +79,35 @@ class SectionIndex(object):
         else:
             raise SectionNotFound()
 
+    def SetSectionPosition( self, sectionName, newPosition ):
+        '''
+        Sets the position of a section
+
+        Args:
+            sectionName     The name of the section to set
+            newPosition     The new position to set
+        Throws:
+            SectionNotFound If section is not found in index
+            ValueError      If newPosition is invalid
+        '''
+        if newPosition < 0:
+            raise ValueError
+        currentPosition = self.GetSectionPosition( sectionName )
+        if currentPosition != newPosition:
+            newSections = []
+            sectionToMove = self.sections[ currentPosition ]
+            # Recreate the array in the new order
+            insertIndex = 0
+            for s in self.sections:
+                # Skip the original entry
+                if s is not sectionToMove:
+                    if insertIndex == newPosition:
+                        newSections.append( sectionToMove )
+                        insertIndex += 1
+                    newSections.append( s )
+                    insertIndex += 1
+
+            if insertIndex <= newPosition:
+                # We haven't added the section yet
+                newSections.append( sectionToMove )
+            self.sections = newSections
