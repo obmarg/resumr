@@ -6,6 +6,8 @@ import pygit2
 import gitutils
 import doc
 import section
+import sectionindex
+from constants import SECTION_INDEX_FILENAME
 from collections import namedtuple
 
 class BaseTest(unittest.TestCase):
@@ -20,7 +22,7 @@ class GitUtilsTest(BaseTest):
     '''
     Tests for gitutils.py
     '''
-    
+
     def testCommitBlob_Initial( self ):
         '''
         Tests committing initial blob
@@ -55,23 +57,23 @@ class GitUtilsTest(BaseTest):
         '''
 
         commitTuple = namedtuple( 'commitTuple', [ 'tree', 'oid' ] )
-        
+
         # Create some test constants
         signature = 'SignatureString'
         content = 'Some wonderous content'
         name = 'nameo'
         message = 'a brilliant message'
         testUpdateRef = 'something'
-        parentCommits = [ 
-                commitTuple( 'tree0', 'oid0' ), 
-                commitTuple( 'tree1', 'oid1' ) 
+        parentCommits = [
+                commitTuple( 'tree0', 'oid0' ),
+                commitTuple( 'tree1', 'oid1' )
                 ]
 
         # Mock out the time function
         self.mox.StubOutWithMock(gitutils.time, 'time' )
         gitutils.time.time().AndReturn( 100 )
 
-        # Mock out the signature constructor 
+        # Mock out the signature constructor
         self.mox.StubOutWithMock(gitutils.pygit2, 'Signature' )
 
         gitutils.pygit2.Signature(
@@ -84,12 +86,12 @@ class GitUtilsTest(BaseTest):
 
         # Create the mock tree builder
         mockBuilder = self.mox.CreateMockAnything()
-        
+
         if parents:
             mockRepo.TreeBuilder( 'tree0' ).AndReturn( mockBuilder )
         else:
             mockRepo.TreeBuilder().AndReturn( mockBuilder )
-        
+
         mockBuilder.insert( name, 'blob', 0 )
         mockBuilder.write().AndReturn( 'treeOid' )
 
@@ -134,6 +136,14 @@ class DocumentTests(BaseTest):
         super( DocumentTests, self ).tearDown()
         doc.rootPath = self.origRootPath
 
+    def _createMockRepo( self ):
+        '''
+        Creates a mock repository for use in tests
+        '''
+        return doc.Repository(
+                os.path.join( 'testPath', 'name.git' )
+                )
+
     def testCreate( self ):
         '''
         Tests creation of document
@@ -141,14 +151,14 @@ class DocumentTests(BaseTest):
 
         # Create a mock repo
         mockRepo = self.mox.CreateMock( pygit2.Repository )
-        
+
         # Set up expectations.  First init repository
-        doc.init_repository( 
+        doc.init_repository(
                 os.path.join( 'testPath', 'name.git' ), True
                 ).AndReturn( mockRepo )
         # Then original commit & create master reference
-        doc.CommitBlob( 
-                mockRepo, '', 'layout', 'Initial commit'
+        doc.CommitBlob(
+                mockRepo, '', SECTION_INDEX_FILENAME, 'Initial commit'
                 ).AndReturn( 'commitId' )
         mockRepo.create_reference( 'refs/heads/master', 'commitId' )
 
@@ -163,9 +173,7 @@ class DocumentTests(BaseTest):
         '''
         Tests construction without create
         '''
-        mockRepo = doc.Repository( 
-                os.path.join( 'testPath', 'name.git' )
-                )
+        mockRepo = self._createMockRepo()
 
         self.mox.ReplayAll()
         d = doc.Document( 'name' )
@@ -180,13 +188,13 @@ class DocumentTests(BaseTest):
         self.mox.UnsetStubs()
         self.mox.StubOutWithMock(doc, 'Repository')
 
-        doc.Repository( 
-                os.path.join( 'testPath', 'name.git' ) 
+        doc.Repository(
+                os.path.join( 'testPath', 'name.git' )
                 ).AndRaise(KeyError)
 
         self.mox.ReplayAll()
 
-        self.assertRaises( 
+        self.assertRaises(
                 doc.RepoNotFound,
                 lambda: doc.Document( 'name' )
                 )
@@ -197,13 +205,10 @@ class DocumentTests(BaseTest):
         '''
         Tests adding a section
         '''
+        mockRepo = self._createMockRepo()
 
-        mockRepo = doc.Repository( 
-                os.path.join( 'testPath', 'name.git' )
-                )
-
-        doc.CommitBlob( 
-                mockRepo, 'content', 'sectionName', 
+        doc.CommitBlob(
+                mockRepo, 'content', 'sectionName',
                 'Created section sectionName'
                 ).AndReturn( 'commitId' )
 
@@ -216,8 +221,8 @@ class DocumentTests(BaseTest):
                 ).AndReturn( mockRef )
         mockRepo[ 'oid' ].AndReturn( 'commit' )
 
-        mockSection = doc.Section( 
-                'sectionName', 'commit', mockRepo 
+        mockSection = doc.Section(
+                'sectionName', 'commit', mockRepo
                 )
 
         self.mox.ReplayAll()
@@ -226,29 +231,27 @@ class DocumentTests(BaseTest):
         s = d.AddSection( 'sectionName', 'content' )
 
         self.mox.VerifyAll()
-        
+
         self.assertEqual( mockSection, s )
 
     def testListSections( self ):
         '''
         Tests the Sections function
         '''
-        mockRepo = doc.Repository( 
-                os.path.join( 'testPath', 'name.git' )
-                )
+        mockRepo = self._createMockRepo()
 
         mockRefType = namedtuple( 'mockRef', 'oid' )
         mockRef = mockRefType( 'oid' )
         mockRef2 = mockRefType( 'oid2' )
 
-        mockRepo.listall_references().AndReturn( [ 
+        mockRepo.listall_references().AndReturn( [
             'refs/heads/sections/section',
             'refs/heads/sections/anotherSection',
             'refs/heads/master'
             ] )
 
-        mockRepo.lookup_reference( 
-                'refs/heads/sections/section' 
+        mockRepo.lookup_reference(
+                'refs/heads/sections/section'
                 ).AndReturn( mockRef )
         mockRepo[ 'oid' ].AndReturn( 'commit1' )
         mockSection1 = doc.Section( 'section', 'commit1', mockRepo )
@@ -273,14 +276,12 @@ class DocumentTests(BaseTest):
         '''
         Tests the find section function
         '''
-        mockRepo = doc.Repository( 
-                os.path.join( 'testPath', 'name.git' )
-                )
+        mockRepo = self._createMockRepo()
 
         mockRefType = namedtuple( 'mockRef', 'oid' )
         mockRef = mockRefType( 'oid' )
 
-        mockRepo.lookup_reference( 
+        mockRepo.lookup_reference(
                 'refs/heads/sections/section'
                 ).AndReturn( mockRef )
 
@@ -291,7 +292,7 @@ class DocumentTests(BaseTest):
         self.mox.ReplayAll()
 
         d = doc.Document( 'name' )
-        s = d.FindSection( 'section' )  
+        s = d.FindSection( 'section' )
 
         self.mox.VerifyAll()
         self.assertEqual( mockSection, s )
@@ -300,11 +301,9 @@ class DocumentTests(BaseTest):
         '''
         Tests finding a missing section
         '''
-        mockRepo = doc.Repository( 
-                os.path.join( 'testPath', 'name.git' )
-                )
+        mockRepo = self._createMockRepo()
 
-        mockRepo.lookup_reference( 
+        mockRepo.lookup_reference(
                 'refs/heads/sections/section'
                 ).AndRaise( KeyError )
 
@@ -319,12 +318,46 @@ class DocumentTests(BaseTest):
 
         self.mox.VerifyAll()
 
+    def testCurrentSections( self ):
+        '''
+        Tests the current sections function
+        '''
+        mockRepo = self._createMockRepo()
+        self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
+        mockFindFunc = self.mox.StubOutWithMock(
+                doc.Document,
+                'FindSection'
+                )
+
+        EntryType = sectionindex.SectionIndexEntry
+        sectionList = [
+                EntryType( 'header' ),
+                EntryType( 'body' ),
+                EntryType( 'footer' )
+                ]
+
+        index = doc.SectionIndex( mockRepo )
+        index.CurrentSections().AndReturn( sectionList )
+
+        for s in sectionList:
+            doc.Document.FindSection( s.name ).AndReturn( s )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+
+        result = d.CurrentSections()
+        for expected, actual in zip( enumerate( sectionList ), result ):
+            self.assertEqual( expected[0], actual[0] )
+            self.assertEqual( expected[1], actual[1] )
+
+        self.mox.VerifyAll()
 
 class SectionTests(BaseTest):
     '''
     Tests the section class
-   
-    Currently this only tests the 
+
+    Currently this only tests the
     CurrentContent & SetContent functions
 
     TODO: Write the rest of the tests
@@ -347,7 +380,7 @@ class SectionTests(BaseTest):
         mockHead.tree = self.mox.CreateMockAnything()
 
         mockHead.tree[ 0 ].AndReturn( mockCommit )
-        
+
         mockBlobType = namedtuple( 'mockBlob', [ 'data' ] )
         mockBlob = mockBlobType( 'blobData' )
 
@@ -382,4 +415,4 @@ class SectionTests(BaseTest):
 
         self.mox.VerifyAll()
         self.assertEqual( s.headCommit, 'newCommit' )
- 
+
