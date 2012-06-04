@@ -5,9 +5,8 @@ define(
       template: '#section-editor-template'
 
       events:
-        'change #wmd-input' : 'onChange'
-        'click #wmd-undo-button' : 'onChange'
-        'click #wmd-redo-button' : 'onChange'
+        'click #saveButton' : 'doSave' 
+        'click #cancelButton' : 'doCancel'
 
       initialize: ->
         @editor = null
@@ -19,6 +18,12 @@ define(
         @editor = new Pagedown.Editor( converter )
         @editor.run()
 
-      onChange: ->
-        @model.set( 'content', $( '#wmd-input' ).val() )
+      doSave: ->
+        @model.save( content: $( '#wmd-input' ).val() )
+        # TODO: Move back to index?
+
+      doCancel: ->
+        $( '#wmd-input' ).val( @model.get( 'content' ) )
+        @editor.refreshPreview()
+        # TODO: Move back to index?
 )

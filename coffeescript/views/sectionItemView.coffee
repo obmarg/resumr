@@ -24,7 +24,7 @@ define(
         @model.destroy()
 
       onClickEdit: () ->
-        name = @model.cid
+        name = @model.get( 'name' )
         Backbone.history.navigate(
           "section/#{name}/edit"
           trigger: true

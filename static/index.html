@@ -17,9 +17,9 @@
 	<link rel="stylesheet/less" href="less/style.less">
 	<script src="js/libs/less-1.3.0.min.js"></script>
 	-->
-	<link rel="stylesheet" href="less/style.css">
+	<link rel="stylesheet" href="static/less/style.css">
 	
-	<script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+	<script src="static/js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
 </head>
 <body>
 <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
@@ -69,16 +69,16 @@
 
     </div> <!-- /container -->
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
+<script>window.jQuery || document.write('<script src="static/js/libs/jquery-1.7.2.min.js"><\/script>')</script>
 
 <!-- scripts concatenated and minified via ant build script-->
-<script src="js/libs/bootstrap/bootstrap.min.js"></script>
+<script src="static/js/libs/bootstrap/bootstrap.min.js"></script>
 <!-- TODO: Might want to use the dev versions of these at some point -->
-<script src="js/libs/underscore-min.js"></script>
-<script src="js/libs/backbone-min.js"></script>
-<script src="js/libs/backbone.marionette.js"></script>
+<script src="static/js/libs/underscore-min.js"></script>
+<script src="static/js/libs/backbone-min.js"></script>
+<script src="static/js/libs/backbone.marionette.js"></script>
 
-<script src='js/libs/require.min.js' data-main='js/main.js'></script>
+<script src='static/js/libs/require.min.js' data-main='static/js/main.js'></script>
 <!-- end scripts-->
 
 <!-- Start templates -->
@@ -89,13 +89,24 @@
 	</div>
 </script>
 <script id='section-editor-template' type='text/template'>
-	<div id='editor' class='span6'>
-		<div id='wmd-button-bar'></div>
-		<textarea id='wmd-input' class='span6'><%= content %></textarea>
+	<div id='row-fluid'>
+		<h3 class='span12'>
+			Editing Section "<%= name %>" &nbsp;
+			<button id='saveButton' class='btn btn-primary'>
+				<i class='icon-ok-sign icon-white'></i> Save
+			</button>
+			<button id='cancelButton' class='btn btn-danger'>Cancel</button>
+		</h3>
 	</div>
-	<div id='preview' class='span6'>
-		<div class='wmd-button-row'>&nbsp;</div>
-		<div id='wmd-preview'>
+	<div id='row-fluid'>
+		<div id='editor' class='span6'>
+			<div id='wmd-button-bar'></div>
+			<textarea id='wmd-input' class='span6'><%= content %></textarea>
+		</div>
+		<div id='preview' class='span6'>
+			<div class='wmd-button-row'>&nbsp;</div>
+			<div id='wmd-preview'>
+			</div>
 		</div>
 	</div>
 </script>

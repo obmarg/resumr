@@ -3,5 +3,6 @@ define [ ], ( ) ->
     defaults: 
       content: 'blah de blah'
       name: 'Something'
+    idAttribute: 'name'
   )
   return Section

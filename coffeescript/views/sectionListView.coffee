@@ -12,16 +12,19 @@ define(
         model = item.model
         currentIndex = @collection.indexOf( model )
         if currentIndex != 0
-          @collection.remove( model )
-          @collection.add( model, at: currentIndex - 1 )
-          @render()
+          other = @collection.at( currentIndex - 1 )
+          currentPos = model.get( 'pos' )
+          model.set( 'pos', currentPos - 1 ) 
+          other.set( 'pos', currentPos ) 
+          @collection.sort()
 
       itemMoveDown: (item) ->
         model = item.model
         currentIndex = @collection.indexOf( model )
-        newIndex = currentIndex + 1
-        if newIndex < @collection.length 
-          @collection.remove( model )
-          @collection.add( model, at: newIndex )
-          @render()
+        if currentIndex < @collection.length 
+          other = @collection.at( currentIndex + 1 )
+          currentPos = model.get( 'pos' )
+          model.set( 'pos', currentPos + 1 ) 
+          other.set( 'pos', currentPos ) 
+          @collection.sort()
 )
