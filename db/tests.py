@@ -265,6 +265,22 @@ class DocumentTests(BaseTest):
 
         self.assertEqual( mockSection, s )
 
+    def testRemoveSection( self ):
+        '''Tests removing a section'''
+        self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
+        mockRepo = self._createMockRepo()
+
+        mockSectionIndex = doc.SectionIndex( mockRepo )
+        mockSectionIndex.RemoveSection( 'sectionName' )
+        mockSectionIndex.Save( mockRepo )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+        d.RemoveSection( 'sectionName' )
+
+        self.mox.VerifyAll()
+
     def testListSections( self ):
         '''
         Tests the Sections function
@@ -571,6 +587,31 @@ class SectionIndexTests(BaseTest):
         self.assertEqual( 'string', sections[ 3 ] )
 
         self.mox.VerifyAll()
+
+    def testRemoveSection( self ):
+        ''' Tests removing a section '''
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+        sectionData = 'header\nfooter'
+
+        self.mox.ReplayAll()
+
+        headerIndexEntry = sectionindex.SectionIndexEntry( 'header' )
+
+        index = sectionindex.SectionIndex()
+        index.ProcessData( sectionData )
+
+        # Remove the footer first
+        index.RemoveSection( 'footer' )
+
+        self.assertEqual( [ headerIndexEntry ], index.CurrentSections() )
+
+        # Try to remove it again, shouldn't error
+        index.RemoveSection( 'footer' )
+        self.assertEqual( [ headerIndexEntry ], index.CurrentSections() )
+
+        # Now remove the other section and check
+        index.RemoveSection( 'header' )
+        self.assertEqual( [], index.CurrentSections() )
 
     def testGetSectionPosition( self ):
         '''
