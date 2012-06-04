@@ -36,6 +36,7 @@
           <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="#">Overall Layout</a></li>
+              <li><a href="#newSection">Add New Section</a></li>
               <li><a href="#css">Stylesheet</a></li>
               <li><a href="#render">Render</a></li>
             </ul>
@@ -91,7 +92,17 @@
 <script id='section-editor-template' type='text/template'>
 	<div id='row-fluid'>
 		<h3 class='span12'>
-			Editing Section "<%= name %>" &nbsp;
+			<% if ( isNew ) { %>
+				New Section &nbsp; 
+				<input 
+					class='no-margin' 
+					type='text' 
+					id='sectionName' 
+					placeholder='Section Name' /> &nbsp;
+			<% } else { %>
+				<%= isNew %>
+				Editing Section "<%= item.name %>" &nbsp;
+			<% } %>
 			<button id='saveButton' class='btn btn-primary'>
 				<i class='icon-ok-sign icon-white'></i> Save
 			</button>
@@ -101,7 +112,7 @@
 	<div id='row-fluid'>
 		<div id='editor' class='span6'>
 			<div id='wmd-button-bar'></div>
-			<textarea id='wmd-input' class='span6'><%= content %></textarea>
+			<textarea id='wmd-input' class='span6'><%= item.content %></textarea>
 		</div>
 		<div id='preview' class='span6'>
 			<div class='wmd-button-row'>&nbsp;</div>

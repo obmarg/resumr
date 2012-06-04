@@ -27,6 +27,15 @@ define(
         )
         layout.content.show( sectionListView )
 
+      sectionNew: (name) ->
+        layout = new SectionEditor( model: new Section )
+        layout.bindTo(
+          layout, 'saved', (model) =>
+            @sectionList.insert( model )
+        )
+        @page.show( layout )
+        layout.createEditor()
+
       sectionEdit: (name) ->
         @sectionFetch.then( =>
           # After the sections have been fetched,
@@ -38,6 +47,7 @@ define(
           @page.show( layout )
           layout.createEditor()
         )
+
        
     return Controller
 )

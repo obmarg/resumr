@@ -11,6 +11,9 @@ define(
       initialize: ->
         @editor = null
 
+      serializeData: ->
+        return item: @model.toJSON(), isNew: @model.isNew()
+
       createEditor: ->
         if @editor?
           return
@@ -19,7 +22,10 @@ define(
         @editor.run()
 
       doSave: ->
-        @model.save( content: $( '#wmd-input' ).val() )
+        @model.save( 
+          { content: $( '#wmd-input' ).val() },
+          { success: => @vent.trigger( 'saved' ) }
+        )
         # TODO: Move back to index?
 
       doCancel: ->
