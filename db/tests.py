@@ -23,6 +23,25 @@ TestCommitType = namedtuple( 'TestCommitType', [ 'tree', 'oid' ] )
 TestObjectType = namedtuple( 'TestObjectType', 'oid' )
 
 
+def StubOutConstructor( mox, cls ):
+    '''
+    Mocks out the constructor of a class then hides the mock so there's no
+    verification.  For use when we're calling the constructor ourselves but not
+    actually wanting to test anything going on in the constructor
+
+    Since we use the mox StubOutWithMock function, calling UnsetStubs will
+    replace the constructor with the original
+
+    Params:
+        mox     Our current Mox instance
+        cls     The class to stub out
+    '''
+    # Stub out the constructor so it gets reset
+    mox.StubOutWithMock( cls, '__init__' )
+    # Then replace it with a lambda, so it doesn't get validated
+    cls.__init__ = lambda *pos, **kw: None
+
+
 class GitUtilsTest(BaseTest):
     '''
     Tests for gitutils.py
@@ -416,6 +435,22 @@ class SectionTests(BaseTest):
         self.mox.VerifyAll()
         self.assertEqual( s.headCommit, 'newCommit' )
 
+    def testGetPosition( self ):
+        '''
+        Tests the GetPosition function
+        '''
+        self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
+        mockIndex = section.SectionIndex( 'repo' )
+
+        mockIndex.GetSectionPosition( 'sectionName' ).AndReturn( 100 )
+        self.mox.ReplayAll()
+
+        s = section.Section( 'sectionName', 'commit', 'repo' )
+
+        self.assertEqual( 100, s.GetPosition() )
+
+        self.mox.VerifyAll()
+
 
 class SectionIndexTests(BaseTest):
     '''
@@ -454,11 +489,7 @@ class SectionIndexTests(BaseTest):
         Tests the process data function and that the correct result is returned
         from CurrentSections
         '''
-
-        # Stub out the constructor so it gets reset
-        self.mox.StubOutWithMock( sectionindex.SectionIndex, '__init__' )
-        # Then replace it with a lambda, so it doesn't get validated
-        sectionindex.SectionIndex.__init__ = lambda x, y: None
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
 
         self.mox.StubOutWithMock( sectionindex, 'SectionIndexEntry' )
 
@@ -477,3 +508,24 @@ class SectionIndexTests(BaseTest):
 
         expectedData = [ 'headerLine', 'middleLine', 'footerLine' ]
         self.assertEqual( expectedData, s.CurrentSections() )
+
+    def testGetSectionPosition( self ):
+        '''
+        Tests GetSectionPosition
+        '''
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        sectionData = 'header\nmiddle\nfooter'
+
+        # Set up our section index
+        index = sectionindex.SectionIndex()
+        index.ProcessData( sectionData )
+
+        # Check we get the expected output
+        self.assertEqual( 1, index.GetSectionPosition( 'middle' ) )
+        self.assertEqual( 2, index.GetSectionPosition( 'footer' ) )
+        self.assertEqual( 0, index.GetSectionPosition( 'header' ) )
+        self.assertRaises(
+                sectionindex.SectionNotFound,
+                lambda: index.GetSectionPosition( 'missing' )
+                )

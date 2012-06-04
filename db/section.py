@@ -1,6 +1,7 @@
-import pygit2
 from gitutils import CommitBlob
-from .constants import SECTION_REF_PREFIX 
+from .sectionindex import SectionIndex
+from .constants import SECTION_REF_PREFIX
+
 
 class Section(object):
     '''
@@ -10,7 +11,7 @@ class Section(object):
     def __init__( self, name, headCommit, repo ):
         '''
         Constructor
-        
+
         Args:
             name        The name of the section
             headCommit  The head commit of the section
@@ -44,7 +45,7 @@ class Section(object):
                 current = current.parents[ 0 ]
             else:
                 break
-            
+
     def SetContent( self, newContent ):
         '''
         Adds a new version of the section
@@ -62,4 +63,15 @@ class Section(object):
                 )
         self.headCommit = self.repo[ newId ]
 
+    def GetPosition( self ):
+        '''
+        Finds the current position of the section
+
+        Returns:
+            The position of this section
+        Throws:
+            SectionNotFound error if section not found in index
+        '''
+        index = SectionIndex(self.repo)
+        return index.GetSectionPosition( self.name )
 

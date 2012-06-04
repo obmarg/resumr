@@ -2,7 +2,7 @@
 import re
 from collections import namedtuple
 from .constants import MASTER_REF
-from .errors import MasterNotFound, BrokenMaster
+from .errors import MasterNotFound, BrokenMaster, SectionNotFound
 
 SectionIndexEntry = namedtuple('SectionIndexEntry', ['name'])
 
@@ -58,3 +58,24 @@ class SectionIndex(object):
         Returns list of the current sections
         '''
         return self.sections
+
+    def GetSectionPosition( self, sectionName ):
+        '''
+        Gets the position of a section
+
+        Args:
+            sectionName    The name of the section to find
+        Returns:
+            The position of the section
+        Throws:
+            SectionNotFound error if section not found in index
+        '''
+        matchingSections = [
+                s[0] for s in enumerate( self.sections )
+                if s[1].name == sectionName
+                ]
+        if matchingSections:
+            return matchingSections[ 0 ]
+        else:
+            raise SectionNotFound()
+
