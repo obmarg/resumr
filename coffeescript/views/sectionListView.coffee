@@ -16,6 +16,8 @@ define(
           currentPos = model.get( 'pos' )
           model.set( 'pos', currentPos - 1 ) 
           other.set( 'pos', currentPos ) 
+          model.save()
+          other.save()
           @collection.sort()
 
       itemMoveDown: (item) ->
@@ -26,5 +28,8 @@ define(
           currentPos = model.get( 'pos' )
           model.set( 'pos', currentPos + 1 ) 
           other.set( 'pos', currentPos ) 
+          model.save()
+          other.save()
           @collection.sort()
+
 )
