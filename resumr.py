@@ -49,5 +49,17 @@ def UpdateSection(name):
     return "OK"
 
 
+@app.route('/api/sections/<name>', methods=['DELETE'])
+def RemoveSection(name):
+    '''
+    Removes a section
+
+    Args:
+        name    The name of the section to remove
+    '''
+    d = GetDoc()
+    d.RemoveSection( name )
+    return "OK"
+
 if __name__ == "__main__":
     app.run()
