@@ -160,3 +160,16 @@ class Document(object):
         index.AddSection( name )
         index.Save( self.repo )
         return Section( name, self.repo[ ref.oid ], self.repo )
+
+    def RemoveSection( self, name ):
+        '''
+        Removes a section.
+        This function does not actually delete the data associated
+        with a section, it just removes it from the index.
+
+        Args:
+            name    The name of the section to remove
+        '''
+        index = SectionIndex( self.repo )
+        index.RemoveSection( name )
+        index.Save( self.repo )

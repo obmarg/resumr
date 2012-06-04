@@ -75,6 +75,21 @@ class SectionIndex(object):
         '''
         self.sections.append( SectionIndexEntry( name ) )
 
+    def RemoveSection( self, name ):
+        '''
+        Removes a section from the index
+
+        Args:
+            name    The name of the section to remove
+        '''
+        toRemove = SectionIndexEntry( name )
+        try:
+            self.sections.remove( toRemove )
+        except ValueError:
+            # Can't remove if not there.  But shouldn't be fatal, so don't
+            # error
+            pass
+
     def GetSectionPosition( self, sectionName ):
         '''
         Gets the position of a section
