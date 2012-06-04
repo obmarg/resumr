@@ -7,8 +7,9 @@ import gitutils
 import doc
 import section
 import sectionindex
-from constants import SECTION_INDEX_FILENAME
+from constants import SECTION_INDEX_FILENAME, MASTER_REF
 from collections import namedtuple
+
 
 class BaseTest(unittest.TestCase):
     def setUp(self):
@@ -16,6 +17,10 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         self.mox.UnsetStubs()
+
+TestBlobType = namedtuple( 'TestBlobType', [ 'data' ] )
+TestCommitType = namedtuple( 'TestCommitType', [ 'tree', 'oid' ] )
+TestObjectType = namedtuple( 'TestObjectType', 'oid' )
 
 
 class GitUtilsTest(BaseTest):
@@ -56,8 +61,6 @@ class GitUtilsTest(BaseTest):
             updateRef   If true, supplies an updateRef
         '''
 
-        commitTuple = namedtuple( 'commitTuple', [ 'tree', 'oid' ] )
-
         # Create some test constants
         signature = 'SignatureString'
         content = 'Some wonderous content'
@@ -65,8 +68,8 @@ class GitUtilsTest(BaseTest):
         message = 'a brilliant message'
         testUpdateRef = 'something'
         parentCommits = [
-                commitTuple( 'tree0', 'oid0' ),
-                commitTuple( 'tree1', 'oid1' )
+                TestCommitType( 'tree0', 'oid0' ),
+                TestCommitType( 'tree1', 'oid1' )
                 ]
 
         # Mock out the time function
@@ -118,6 +121,7 @@ class GitUtilsTest(BaseTest):
         self.mox.VerifyAll()
         self.assertEqual( 'commitId', commitId )
 
+
 class DocumentTests(BaseTest):
     '''
     Tests the document class
@@ -165,7 +169,7 @@ class DocumentTests(BaseTest):
         # Now, run the test
         self.mox.ReplayAll()
 
-        d = doc.Document( 'name', create=True )
+        doc.Document( 'name', create=True )
 
         self.mox.VerifyAll()
 
@@ -173,10 +177,10 @@ class DocumentTests(BaseTest):
         '''
         Tests construction without create
         '''
-        mockRepo = self._createMockRepo()
+        self._createMockRepo()
 
         self.mox.ReplayAll()
-        d = doc.Document( 'name' )
+        doc.Document( 'name' )
 
         self.mox.VerifyAll()
 
@@ -212,8 +216,7 @@ class DocumentTests(BaseTest):
                 'Created section sectionName'
                 ).AndReturn( 'commitId' )
 
-        mockRefType = namedtuple( 'mockRef', 'oid' )
-        mockRef = mockRefType( 'oid' )
+        mockRef = TestObjectType( 'oid' )
 
         mockRepo.create_reference(
                 'refs/heads/sections/sectionName',
@@ -240,9 +243,8 @@ class DocumentTests(BaseTest):
         '''
         mockRepo = self._createMockRepo()
 
-        mockRefType = namedtuple( 'mockRef', 'oid' )
-        mockRef = mockRefType( 'oid' )
-        mockRef2 = mockRefType( 'oid2' )
+        mockRef = TestObjectType( 'oid' )
+        mockRef2 = TestObjectType( 'oid2' )
 
         mockRepo.listall_references().AndReturn( [
             'refs/heads/sections/section',
@@ -278,8 +280,7 @@ class DocumentTests(BaseTest):
         '''
         mockRepo = self._createMockRepo()
 
-        mockRefType = namedtuple( 'mockRef', 'oid' )
-        mockRef = mockRefType( 'oid' )
+        mockRef = TestObjectType( 'oid' )
 
         mockRepo.lookup_reference(
                 'refs/heads/sections/section'
@@ -324,7 +325,7 @@ class DocumentTests(BaseTest):
         '''
         mockRepo = self._createMockRepo()
         self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
-        mockFindFunc = self.mox.StubOutWithMock(
+        self.mox.StubOutWithMock(
                 doc.Document,
                 'FindSection'
                 )
@@ -353,6 +354,7 @@ class DocumentTests(BaseTest):
 
         self.mox.VerifyAll()
 
+
 class SectionTests(BaseTest):
     '''
     Tests the section class
@@ -374,15 +376,13 @@ class SectionTests(BaseTest):
         mockHead = self.mox.CreateMock( pygit2.Commit )
         mockRepo = self.mox.CreateMock( pygit2.Repository )
 
-        mockCommitType = namedtuple( 'mockTree', [ 'oid' ] )
-        mockCommit = mockCommitType( 'blobOid' )
+        mockCommit = TestObjectType( 'blobOid' )
 
         mockHead.tree = self.mox.CreateMockAnything()
 
         mockHead.tree[ 0 ].AndReturn( mockCommit )
 
-        mockBlobType = namedtuple( 'mockBlob', [ 'data' ] )
-        mockBlob = mockBlobType( 'blobData' )
+        mockBlob = TestBlobType( 'blobData' )
 
         mockRepo[ 'blobOid' ].AndReturn( mockBlob )
 
@@ -410,9 +410,70 @@ class SectionTests(BaseTest):
 
         self.mox.ReplayAll()
 
-        s= section.Section( 'name', mockHead, mockRepo )
+        s = section.Section( 'name', mockHead, mockRepo )
         s.SetContent( 'content' )
 
         self.mox.VerifyAll()
         self.assertEqual( s.headCommit, 'newCommit' )
 
+
+class SectionIndexTests(BaseTest):
+    '''
+    Tests the Section Index class
+    '''
+
+    def testConstruction( self ):
+        '''
+        Tests the construction of a SectionIndex
+        '''
+
+        # Set up our fake commit
+        testCommit = TestCommitType(
+                { 'index' : TestObjectType( 'indexOid' ) },
+                'unused'
+                )
+        testBlob = TestBlobType( 'someData' )
+
+        mockRepo = self.mox.CreateMock( pygit2.Repository )
+        self.mox.StubOutWithMock( sectionindex.SectionIndex, 'ProcessData' )
+
+        mockRepo.lookup_reference( MASTER_REF ).AndReturn( 'ref' )
+        mockRepo[ 'ref' ].AndReturn( testCommit )
+        mockRepo[ 'indexOid' ].AndReturn( testBlob )
+
+        sectionindex.SectionIndex.ProcessData( testBlob.data )
+
+        self.mox.ReplayAll()
+
+        sectionindex.SectionIndex( mockRepo )
+
+        self.mox.VerifyAll()
+
+    def testProcessAndCurrentSections( self ):
+        '''
+        Tests the process data function and that the correct result is returned
+        from CurrentSections
+        '''
+
+        # Stub out the constructor so it gets reset
+        self.mox.StubOutWithMock( sectionindex.SectionIndex, '__init__' )
+        # Then replace it with a lambda, so it doesn't get validated
+        sectionindex.SectionIndex.__init__ = lambda x, y: None
+
+        self.mox.StubOutWithMock( sectionindex, 'SectionIndexEntry' )
+
+        testData = 'header\nmiddle\nfooter'
+
+        sectionindex.SectionIndexEntry( 'header' ).AndReturn( 'headerLine' )
+        sectionindex.SectionIndexEntry( 'middle' ).AndReturn( 'middleLine' )
+        sectionindex.SectionIndexEntry( 'footer' ).AndReturn( 'footerLine' )
+
+        self.mox.ReplayAll()
+
+        s = sectionindex.SectionIndex( None )
+        s.ProcessData( testData )
+
+        self.mox.VerifyAll()
+
+        expectedData = [ 'headerLine', 'middleLine', 'footerLine' ]
+        self.assertEqual( expectedData, s.CurrentSections() )

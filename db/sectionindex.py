@@ -27,7 +27,31 @@ class SectionIndex(object):
             MasterNotFound  If master branch not found
             BrokenMaster    If master data couldn't be read
         '''
-        pass
+        try:
+            ref = repo.lookup_reference(
+                    MASTER_REF
+                    )
+        except KeyError:
+            raise MasterNotFound()
+        try:
+            commit = repo[ref]
+            indexOid = commit.tree['index'].oid
+            data = repo[indexOid].data
+        except KeyError:
+            return BrokenMaster()
+        self.ProcessData( data )
+
+    def ProcessData( self, data ):
+        '''
+        Process data into the sections list
+        '''
+        self.sections = []
+        for line in data.split('\n'):
+            m = self._lineRegExp.match(line)
+            if not m:
+                raise BrokenMaster()
+            entry = SectionIndexEntry(m.group('name'))
+            self.sections.append(entry)
 
     def CurrentSections(self):
         '''
