@@ -23,7 +23,7 @@ TestCommitType = namedtuple( 'TestCommitType', [ 'tree', 'oid' ] )
 TestObjectType = namedtuple( 'TestObjectType', 'oid' )
 
 
-def StubOutConstructor( mox, cls ):
+def StubOutConstructor( mox, cls, func=None ):
     '''
     Mocks out the constructor of a class then hides the mock so there's no
     verification.  For use when we're calling the constructor ourselves but not
@@ -35,11 +35,16 @@ def StubOutConstructor( mox, cls ):
     Params:
         mox     Our current Mox instance
         cls     The class to stub out
+        func    An optional func to replace the constructor with
+                If not passed, will be a no-op function
     '''
     # Stub out the constructor so it gets reset
     mox.StubOutWithMock( cls, '__init__' )
     # Then replace it with a lambda, so it doesn't get validated
-    cls.__init__ = lambda *pos, **kw: None
+    if func:
+        cls.__init__ = func
+    else:
+        cls.__init__ = lambda *pos, **kw: None
 
 
 class GitUtilsTest(BaseTest):
@@ -620,3 +625,40 @@ class SectionIndexTests(BaseTest):
                 index.CurrentSections()
                 )
 
+    def testSave( self ):
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        mockRepo = self.mox.CreateMock( pygit2.Repository )
+        self.mox.StubOutWithMock( sectionindex, 'CommitBlob' )
+        self.mox.StubOutWithMock( sectionindex.SectionIndex, 'GetIndexString' )
+
+        sectionindex.SectionIndex.GetIndexString().AndReturn( 'indexString' )
+
+        mockRepo.lookup_reference( MASTER_REF ).AndReturn( 'master' )
+        mockRepo[ 'master' ].AndReturn( 'commitObject' )
+
+        sectionindex.CommitBlob(
+                mockRepo,
+                'indexString',
+                'saving section index',
+                [ 'commitObject' ],
+                MASTER_REF
+                )
+
+        self.mox.ReplayAll()
+
+        index = sectionindex.SectionIndex()
+        index.Save( mockRepo )
+
+        self.mox.VerifyAll()
+
+    def testGetIndexString( self ):
+        StubOutConstructor( self.mox, sectionindex.SectionIndex )
+
+        index = sectionindex.SectionIndex()
+
+        data = 'header\nmiddle\nfooter'
+
+        index.ProcessData( data )
+
+        self.assertEqual( data, index.GetIndexString() )

@@ -3,6 +3,7 @@ import re
 from collections import namedtuple
 from .constants import MASTER_REF
 from .errors import MasterNotFound, BrokenMaster, SectionNotFound
+from .gitutils import CommitBlob
 
 SectionIndexEntry = namedtuple('SectionIndexEntry', ['name'])
 
@@ -28,18 +29,20 @@ class SectionIndex(object):
             BrokenMaster    If master data couldn't be read
         '''
         try:
-            ref = repo.lookup_reference(
-                    MASTER_REF
-                    )
-        except KeyError:
-            raise MasterNotFound()
-        try:
-            commit = repo[ref]
+            commit = self._lookupHead( repo )
             indexOid = commit.tree['index'].oid
             data = repo[indexOid].data
         except KeyError:
             return BrokenMaster()
         self.ProcessData( data )
+
+    @staticmethod
+    def _lookupHead( repo ):
+        # Returns the head commit object (or excepts)
+        try:
+            return repo[ repo.lookup_reference( MASTER_REF ) ]
+        except KeyError:
+            raise MasterNotFound
 
     def ProcessData( self, data ):
         '''
@@ -94,20 +97,51 @@ class SectionIndex(object):
             raise ValueError
         currentPosition = self.GetSectionPosition( sectionName )
         if currentPosition != newPosition:
-            newSections = []
-            sectionToMove = self.sections[ currentPosition ]
-            # Recreate the array in the new order
-            insertIndex = 0
-            for s in self.sections:
-                # Skip the original entry
-                if s is not sectionToMove:
-                    if insertIndex == newPosition:
-                        newSections.append( sectionToMove )
-                        insertIndex += 1
-                    newSections.append( s )
-                    insertIndex += 1
+            return self._DoSetSectionPosition( currentPosition, newPosition )
 
-            if insertIndex <= newPosition:
-                # We haven't added the section yet
-                newSections.append( sectionToMove )
-            self.sections = newSections
+    def _DoSetSectionPosition( self, currentPosition, newPosition ):
+        '''
+        Internal section position set function.  Does the position switching,
+        and assumes all arguments have already been validated
+        '''
+        newSections = []
+        sectionToMove = self.sections[ currentPosition ]
+        # Recreate the array in the new order
+        insertIndex = 0
+        for s in self.sections:
+            # Skip the original entry
+            if s is not sectionToMove:
+                if insertIndex == newPosition:
+                    newSections.append( sectionToMove )
+                    insertIndex += 1
+                newSections.append( s )
+                insertIndex += 1
+
+        if insertIndex <= newPosition:
+            # We haven't added the section yet
+            newSections.append( sectionToMove )
+        self.sections = newSections
+
+    def Save( self, repo ):
+        '''
+        Saves a new revision the section index
+
+        Args:
+            repo    The repository to save to
+        '''
+        CommitBlob(
+                repo,
+                self.GetIndexString(),
+                'saving section index',
+                [ self._lookupHead( repo ) ],
+                MASTER_REF
+                )
+
+    def GetIndexString( self ):
+        '''
+        Gets the section data as a string for saving
+
+        Returns:
+            The section data as a string
+        '''
+        return '\n'.join( [ s.name for s in self.sections ] )
