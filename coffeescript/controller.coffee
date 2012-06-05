@@ -29,9 +29,11 @@ define(
 
       sectionNew: (name) ->
         layout = new SectionEditor( model: new Section )
-        layout.bindTo(
+        @newSectionBinding = layout.bindTo(
           layout, 'saved', (model) =>
-            @sectionList.insert( model )
+            @sectionList.add( model )
+            layout.unbindFrom( @newSectionBinding )
+            @newSectionBinding = undefined
         )
         @page.show( layout )
         layout.createEditor()

@@ -22,9 +22,12 @@ define(
         @editor.run()
 
       doSave: ->
-        @model.save( 
-          { content: $( '#wmd-input' ).val() },
-          { success: => @vent.trigger( 'saved' ) }
+        data =
+          content: $( '#wmd-input' ).val()
+        if @model.isNew()
+          data.newName = $( '#sectionName' ).val()
+        @model.save( data,
+          success: => @trigger( 'saved', @model )
         )
         # TODO: Move back to index?
 
