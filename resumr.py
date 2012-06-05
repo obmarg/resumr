@@ -38,6 +38,7 @@ def AddSection():
     '''
     d = GetDoc()
     data = request.json
+    # TODO: Add some validation of the input (either here or in Document)
     s = d.AddSection( data[ 'newName' ], data[ 'content' ] )
     return json.dumps( {
         'name' : s.name,
