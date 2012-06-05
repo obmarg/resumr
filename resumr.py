@@ -16,7 +16,7 @@ def hello():
     return render_template('index.html')
 
 
-@app.route('/api/sections')
+@app.route('/api/sections', methods=['GET'])
 def ListSections():
     ''' Lists the current sections including order '''
     d = GetDoc()
@@ -29,6 +29,22 @@ def ListSections():
     #       Seem to remember some security warning for
     #       returning lists
     return json.dumps( sections )
+
+
+@app.route('/api/sections', methods=['POST'])
+def AddSection():
+    '''
+    Adds a section.
+    '''
+    d = GetDoc()
+    data = request.json
+    # TODO: Add some validation of the input (either here or in Document)
+    s = d.AddSection( data[ 'newName' ], data[ 'content' ] )
+    return json.dumps( {
+        'name' : s.name,
+        'content' : data[ 'content' ],
+        'pos' : s.GetPosition()
+        } )
 
 
 @app.route('/api/sections/<name>', methods=['PUT'])
@@ -62,4 +78,4 @@ def RemoveSection(name):
     return "OK"
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
