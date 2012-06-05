@@ -98,20 +98,26 @@
 					class='no-margin' 
 					type='text' 
 					id='sectionName' 
-					placeholder='Section Name' /> &nbsp;
+					placeholder='Section Name' 
+					tabindex='1'/> &nbsp;
 			<% } else { %>
 				Editing Section "<%= item.name %>" &nbsp;
 			<% } %>
-			<button id='saveButton' class='btn btn-primary'>
+			<button id='saveButton' class='btn btn-primary' tabindex='3'>
 				<i class='icon-ok-sign icon-white'></i> Save
 			</button>
-			<button id='cancelButton' class='btn btn-danger'>Cancel</button>
+			<button id='cancelButton' class='btn btn-danger' tabindex='4'>
+				Cancel
+			</button>
 		</h3>
 	</div>
 	<div id='row-fluid'>
 		<div id='editor' class='span6'>
 			<div id='wmd-button-bar'></div>
-			<textarea id='wmd-input' class='span6'><%= item.content %></textarea>
+			<textarea 
+				id='wmd-input' 
+				class='span6' 
+				tabindex='2'><%= item.content %></textarea>
 		</div>
 		<div id='preview' class='span6'>
 			<div class='wmd-button-row'>&nbsp;</div>
