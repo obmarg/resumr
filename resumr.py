@@ -79,6 +79,31 @@ def RemoveSection(name):
     return "OK"
 
 
+@app.route('/api/sections/<name>/history', methods=['GET'])
+def SectionHistory(name):
+    '''
+    Gets the history for a section
+
+    Args:
+        name    The name of the section
+
+    Notes:
+        Currently this just returns the entire history,
+        but it might be more efficient to just return a few at a time,
+        and include a "next" link.  That way we can do some lazy loading,
+        which should save downloading potentially hundreds of entries when
+        we just need a few
+    '''
+    d = GetDoc()
+    s = d.FindSection( name )
+    data = []
+    for i, d in enumerate( s.ContentHistory() ):
+        # This isn't ideal, since the id's will change after another revision
+        # is added, but it should do for an initial version
+        data.append( { 'id' : i, 'content' : d } )
+    return json.dumps( data )
+
+
 @app.route('/render')
 def Render():
     d = GetDoc()
