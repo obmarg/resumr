@@ -77,5 +77,17 @@ def RemoveSection(name):
     d.RemoveSection( name )
     return "OK"
 
+
+@app.route('/render')
+def Render():
+    d = GetDoc()
+    import markdown
+    sections = [ s for i, s in d.CurrentSections() ]
+    sections = [ markdown.markdown( s.CurrentContent() ) for s in sections ]
+    return render_template(
+            'render.html',
+            sections=sections
+            )
+
 if __name__ == "__main__":
     app.run(debug=True)
