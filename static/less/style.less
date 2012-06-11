@@ -146,3 +146,33 @@ body {
 .center-align {
     text-align: center;
 }
+
+.historyItem {
+    border: 1px solid white;
+    .rounded-corners;
+    padding: 5px;
+
+    margin-bottom: 3px;
+
+    .transition(border-color 1s);
+}
+
+.historyItem:hover {
+    border: 1px solid @grayLight;
+    .rounded-corners;
+
+    .transition(border-color 1s);
+}
+
+.historyItem .tools {
+    float:right;
+    .transparent;
+}
+
+.historyItem:hover .tools {
+    opacity:0.8;
+    filter:alpha(opacity=80);
+
+    .transition(opacity 1s);
+}
+
