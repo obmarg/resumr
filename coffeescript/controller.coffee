@@ -1,6 +1,6 @@
 define( 
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor ) ->
+  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
+  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
     class Controller 
       constructor: (@page) ->
         # Load Temporary test data
@@ -42,12 +42,28 @@ define(
         @sectionFetch.then( =>
           # After the sections have been fetched,
           # set up the view
+          # TODO: Replace this find with something simpler
           section = @sectionList.find( (item) -> 
             item.get( 'name' ) == name
           )
           layout = new SectionEditor( model: section )
           @page.show( layout )
           layout.createEditor()
+        )
+
+      sectionHistory: (name) ->
+        # Opens the section history view
+        @sectionFetch.then( =>
+          # After the sections have been fetched,
+          # set up the view
+          # TODO: Replace this find with something simpler
+          section = @sectionList.find( (item) ->
+            item.get( 'name' ) == name
+          )
+          history = new SectionHistory
+          history.doSetup( name, section )
+          layout = new SectionHistoryView( collection: history )
+          @page.show( layout )
         )
 
        

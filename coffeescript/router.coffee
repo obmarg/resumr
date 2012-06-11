@@ -4,3 +4,4 @@ define [  ], ( ) ->
       '' : 'sectionOverview'
       'newSection' : 'sectionNew'
       'section/:name/edit' : 'sectionEdit'
+      'section/:name/history' : 'sectionHistory'

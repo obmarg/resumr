@@ -124,9 +124,20 @@
 			<i class='icon-edit' title='Edit Section'></i>
 			<i class='icon-chevron-up' title='Move Section Up'></i>
 			<i class='icon-chevron-down' title='Move Section Down'></i>
+			<i class='icon-list' title='View Section History'></i>
 			<i class='icon-remove' title='Remove Section'></i>
 		</div>
 		<%= content %>
+	</div>
+</script>
+<script id='section-history-item-template' type='text/template'>
+	<div class='historyItem'>
+		<div class='tools'>
+			<i class='icon-ok' title='Use this revision'></i>
+			<i class='icon-info-sign' title='Revision Information'></i>
+		</div>
+		<%= content %>
+		</div>
 	</div>
 </script>
 
