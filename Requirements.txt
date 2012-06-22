@@ -1,0 +1,7 @@
+pygit2
+flask
+jinja2
+markdown
+mox
+flask-testing
+blinker
