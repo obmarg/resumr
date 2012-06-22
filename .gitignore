@@ -1,4 +1,6 @@
 .DS_Store
+.coverage
+nosetests.xml
 
 # Ignore compiled python files
 *.pyc
@@ -18,3 +20,4 @@ data/
 
 # Ignore rope files
 .ropeproject/
+
