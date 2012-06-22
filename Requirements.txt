@@ -4,3 +4,4 @@ jinja2
 markdown
 mox
 flask-testing
+blinker

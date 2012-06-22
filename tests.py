@@ -30,6 +30,11 @@ class ResumrTests(TestCase):
         self.assertIs( resumr.GetDoc(), d )
         self.mox.VerifyAll()
 
+    def testIndex(self):
+        rv = self.client.get('/')
+        self.assert200( rv )
+        self.assertTemplateUsed( 'index.html' )
+
     def testListSections(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
@@ -151,6 +156,39 @@ class ResumrTests(TestCase):
         rv = self.client.delete( '/api/sections/jenkins' )
         self.mox.VerifyAll()
         self.assert200( rv )
+
+    def testRender(self):
+        self.mox.StubOutWithMock( resumr.markdown, 'markdown' )
+
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        sections = [
+                ( i, self.mox.CreateMock( Section ) ) for i in range( 100 )
+                ]
+
+        doc.CurrentSections().AndReturn( sections )
+
+        expected = []
+        for i, s in sections:
+            contentStr = 'content' + str(i)
+            markdownStr = 'markdown' + str(i)
+            s.CurrentContent().AndReturn( contentStr )
+            resumr.markdown.markdown(
+                    contentStr
+                    ).AndReturn( markdownStr )
+            expected.append( markdownStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/render' )
+        self.assert200( rv )
+        self.assertTemplateUsed( 'render.html' )
+        self.assertContext( 'sections', expected )
+
+        # Check that the output contains all the expected text
+        for text in expected:
+            self.assertIn( text, rv.data )
 
 
 if __name__ == "__main__":

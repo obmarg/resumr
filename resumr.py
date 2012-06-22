@@ -1,4 +1,5 @@
 import json
+import markdown
 from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
 
@@ -12,7 +13,7 @@ def GetDoc():
 
 
 @app.route("/")
-def hello():
+def index():
     return render_template('index.html')
 
 
@@ -81,7 +82,6 @@ def RemoveSection(name):
 @app.route('/render')
 def Render():
     d = GetDoc()
-    import markdown
     sections = [ s for i, s in d.CurrentSections() ]
     sections = [ markdown.markdown( s.CurrentContent() ) for s in sections ]
     return render_template(
