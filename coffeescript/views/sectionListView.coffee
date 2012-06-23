@@ -1,9 +1,9 @@
-define( 
+define(
   [ 'views/sectionItemView' ],
   ( SectionItemView ) ->
     class SectionListView extends Backbone.Marionette.CollectionView
-      itemView: SectionItemView 
-      
+      itemView: SectionItemView
+
       initialize: () ->
         @bindTo( this, 'itemview:moveUp', @itemMoveUp )
         @bindTo( this, 'itemview:moveDown', @itemMoveDown )
@@ -14,8 +14,8 @@ define(
         if currentIndex != 0
           other = @collection.at( currentIndex - 1 )
           currentPos = model.get( 'pos' )
-          model.set( 'pos', currentPos - 1 ) 
-          other.set( 'pos', currentPos ) 
+          model.set( 'pos', currentPos - 1 )
+          other.set( 'pos', currentPos )
           model.save()
           other.save()
           @collection.sort()
@@ -23,11 +23,11 @@ define(
       itemMoveDown: (item) ->
         model = item.model
         currentIndex = @collection.indexOf( model )
-        if currentIndex < @collection.length 
+        if currentIndex < @collection.length
           other = @collection.at( currentIndex + 1 )
           currentPos = model.get( 'pos' )
-          model.set( 'pos', currentPos + 1 ) 
-          other.set( 'pos', currentPos ) 
+          model.set( 'pos', currentPos + 1 )
+          other.set( 'pos', currentPos )
           model.save()
           other.save()
           @collection.sort()

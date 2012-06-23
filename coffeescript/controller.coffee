@@ -1,7 +1,7 @@
-define( 
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor ) ->
-    class Controller 
+define(
+  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
+  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
+    class Controller
       constructor: (@page) ->
         # Load Temporary test data
         content1 = $( '#tempData1' ).html()
@@ -21,9 +21,9 @@ define(
         layout = new SectionOverviewLayout()
         layout.render()
         @page.show( layout )
-        
-        sectionListView = new SectionListView( 
-          collection: @sectionList 
+
+        sectionListView = new SectionListView(
+          collection: @sectionList
         )
         layout.content.show( sectionListView )
 
@@ -42,7 +42,8 @@ define(
         @sectionFetch.then( =>
           # After the sections have been fetched,
           # set up the view
-          section = @sectionList.find( (item) -> 
+          # TODO: Replace this find with something simpler
+          section = @sectionList.find( (item) ->
             item.get( 'name' ) == name
           )
           layout = new SectionEditor( model: section )
@@ -50,6 +51,30 @@ define(
           layout.createEditor()
         )
 
-       
+      sectionHistory: (name) ->
+        # Opens the section history view
+        @sectionFetch.then( =>
+          # After the sections have been fetched,
+          # set up the view
+          # TODO: Replace this find with something simpler
+          section = @sectionList.find( (item) ->
+            item.get( 'name' ) == name
+          )
+          history = new SectionHistory
+          history.doSetup( name, section )
+          layout = new SectionHistoryView( collection: history )
+          @sectionHistoryBinding = layout.bindTo(
+            layout, 'doClose', =>
+              # TODO: Could be good to delay switching back till we've
+              #       received this here fetch...?
+              section.fetch()
+              layout.unbindFrom( @sectionHistoryBinding )
+              @sectionHistoryBinding = undefined
+              Backbone.history.navigate( '', trigger: true )
+          )
+          @page.show( layout )
+        )
+
+
     return Controller
 )

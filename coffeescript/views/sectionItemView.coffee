@@ -7,13 +7,17 @@ define(
       events:
         'click .icon-remove' : 'onClickDelete'
         'click .icon-edit' : 'onClickEdit'
+        'click .icon-list' : 'onClickHistory'
 
       triggers:
         'click .icon-chevron-up' : 'moveUp'
         'click .icon-chevron-down' : 'moveDown'
 
       initialize: ->
-        @converter = Pagedown.getSanitizingConverter();
+        @converter = Pagedown.getSanitizingConverter()
+        if @model?
+          @bindTo( @model, 'change', @render, @ )
+
 
       serializeData: () ->
         return content: @converter.makeHtml( 
@@ -27,6 +31,13 @@ define(
         name = @model.get( 'name' )
         Backbone.history.navigate(
           "section/#{name}/edit"
+          trigger: true
+        )
+
+      onClickHistory: () ->
+        name = @model.get( 'name' )
+        Backbone.history.navigate(
+          "section/#{name}/history"
           trigger: true
         )
 )
