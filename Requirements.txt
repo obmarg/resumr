@@ -5,3 +5,4 @@ markdown
 mox
 flask-testing
 blinker
+rauth>=0.4.12
