@@ -107,6 +107,31 @@ def SectionHistory(name):
     return json.dumps( data )
 
 
+@app.route(
+    '/api/sections/<name>/history/select/<int:historyId>',
+    methods=['POST']
+    )
+def SelectSectionHistory( name, historyId ):
+    '''
+    Updates a section to make a certain history entry it's head
+
+    Args:
+        name        The name of the section
+        historyId   The id of the history entry to use
+    '''
+    d = GetDoc()
+    try:
+        s = d.FindSection( name )
+    except SectionNotFound:
+        abort( 404 )
+    for i, d in enumerate( s.ContentHistory() ):
+        if i == historyId:
+            s.SetContent( d )
+            return "OK"
+    # If we get here, then there's been no history entry found
+    abort( 404 )
+
+
 @app.route('/render')
 def Render():
     d = GetDoc()

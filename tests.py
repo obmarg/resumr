@@ -192,6 +192,61 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.assert404( rv )
 
+    def testSelectSectionHistory(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'zordon' ).AndReturn( s )
+
+        # Build a list of fake history
+        history = []
+        for i in range( 100 ):
+            content = 'history' + str(i)
+            history.append( content )
+
+        s.ContentHistory().AndReturn( history )
+        s.SetContent( 'history35' )
+
+        self.mox.ReplayAll()
+        rv = self.client.post( '/api/sections/zordon/history/select/35' )
+        self.mox.VerifyAll()
+        self.assert200( rv )
+
+    def testSelectSectionHistoryMissingSection(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        doc.FindSection( 'zordon' ).AndRaise( SectionNotFound )
+
+        self.mox.ReplayAll()
+        rv = self.client.post( '/api/sections/zordon/history/select/35' )
+        self.mox.VerifyAll()
+        self.assert404( rv )
+
+    def testSelectSectionHistoryInvalidId(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'zordon' ).AndReturn( s )
+
+        # Build a list of fake history
+        history = []
+        for i in range( 100 ):
+            content = 'history' + str(i)
+            history.append( content )
+
+        s.ContentHistory().AndReturn( history )
+
+        self.mox.ReplayAll()
+        rv = self.client.post( '/api/sections/zordon/history/select/101' )
+        self.mox.VerifyAll()
+        self.assert404( rv )
+
     def testRender(self):
         self.mox.StubOutWithMock( resumr.markdown, 'markdown' )
 
