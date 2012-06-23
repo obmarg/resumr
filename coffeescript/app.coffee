@@ -1,6 +1,6 @@
-define( 
-  [ 'router', 'controller' ], 
-  ( Router, Controller ) ->
+define(
+  [ 'router', 'controller', 'requests' ],
+  ( Router, Controller, InitRequests ) ->
     app = new Backbone.Marionette.Application()
 
     app.addInitializer( (options) ->
@@ -9,9 +9,11 @@ define(
       Backbone.history.start()
     )
 
+    app.addInitializer( InitRequests )
+
     app.addRegions(
       page: '#page'
     )
-    
+
     return app
 )

@@ -63,6 +63,15 @@ define(
           history = new SectionHistory
           history.doSetup( name, section )
           layout = new SectionHistoryView( collection: history )
+          @sectionHistoryBinding = layout.bindTo(
+            layout, 'doClose', =>
+              # TODO: Could be good to delay switching back till we've
+              #       received this here fetch...?
+              section.fetch()
+              layout.unbindFrom( @sectionHistoryBinding )
+              @sectionHistoryBinding = undefined
+              Backbone.history.navigate( '', trigger: true )
+          )
           @page.show( layout )
         )
 

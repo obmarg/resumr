@@ -7,6 +7,7 @@ define(
       initialize: ->
         
       doSetup: ( name, head ) ->
+        @name = name
         @url = "api/sections/#{name}/history"
         @add(
           id: 0
@@ -14,4 +15,5 @@ define(
           content: head.get( 'content' )
         )
         @fetch()
-)
+
+      )
