@@ -1,7 +1,7 @@
-define( 
+define(
   [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
   ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
-    class Controller 
+    class Controller
       constructor: (@page) ->
         # Load Temporary test data
         content1 = $( '#tempData1' ).html()
@@ -21,9 +21,9 @@ define(
         layout = new SectionOverviewLayout()
         layout.render()
         @page.show( layout )
-        
-        sectionListView = new SectionListView( 
-          collection: @sectionList 
+
+        sectionListView = new SectionListView(
+          collection: @sectionList
         )
         layout.content.show( sectionListView )
 
@@ -43,7 +43,7 @@ define(
           # After the sections have been fetched,
           # set up the view
           # TODO: Replace this find with something simpler
-          section = @sectionList.find( (item) -> 
+          section = @sectionList.find( (item) ->
             item.get( 'name' ) == name
           )
           layout = new SectionEditor( model: section )
@@ -75,6 +75,6 @@ define(
           @page.show( layout )
         )
 
-       
+
     return Controller
 )

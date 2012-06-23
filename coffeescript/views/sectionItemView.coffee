@@ -15,6 +15,9 @@ define(
 
       initialize: ->
         @converter = Pagedown.getSanitizingConverter()
+        if @model?
+          @bindTo( @model, 'change', @render, @ )
+
 
       serializeData: () ->
         return content: @converter.makeHtml( 

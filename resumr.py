@@ -32,6 +32,21 @@ def ListSections():
     return json.dumps( sections )
 
 
+@app.route('/api/sections/<name>', methods=['GET'])
+def GetSection(name):
+    ''' Gets the current details of a section '''
+    d = GetDoc()
+    try:
+        s = d.FindSection( name )
+    except SectionNotFound:
+        abort( 404 )
+    return json.dumps({
+        'name': s.name,
+        'pos': s.GetPosition(),
+        'content': s.CurrentContent()
+        })
+
+
 @app.route('/api/sections', methods=['POST'])
 def AddSection():
     '''
