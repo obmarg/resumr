@@ -157,6 +157,41 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.assert200( rv )
 
+    def testSectionHistory(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'charlie' ).AndReturn( s )
+
+        # Build a list of fake history
+        history = []
+        expected = []
+        for i in range( 100 ):
+            content = 'history' + str(i)
+            history.append( content )
+            expected.append({ 'id': i, 'content': content })
+        s.ContentHistory().AndReturn( history )
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/api/sections/charlie/history' )
+        self.mox.VerifyAll()
+        self.assert200( rv )
+        self.assertEqual( expected, rv.json )
+
+    def testSectionHistoryMissingSection(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        doc.FindSection( 'charlie' ).AndRaise( SectionNotFound )
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/api/sections/charlie/history' )
+        self.mox.VerifyAll()
+        self.assert404( rv )
+
     def testRender(self):
         self.mox.StubOutWithMock( resumr.markdown, 'markdown' )
 

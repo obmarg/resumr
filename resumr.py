@@ -95,7 +95,10 @@ def SectionHistory(name):
         we just need a few
     '''
     d = GetDoc()
-    s = d.FindSection( name )
+    try:
+        s = d.FindSection( name )
+    except SectionNotFound:
+        abort( 404 )
     data = []
     for i, d in enumerate( s.ContentHistory() ):
         # This isn't ideal, since the id's will change after another revision
