@@ -311,6 +311,10 @@ class ResumrTests(TestCase):
         for text in expected:
             self.assertIn( text, rv.data )
 
+        def testLogin(self):
+            rv = self.client.get( '/login' )
+            self.assert200( rv )
+            self.assertTemplateUsed( 'login.html' )
 
 if __name__ == "__main__":
     unittest.main()
