@@ -202,11 +202,14 @@ def OAuthCallback(service):
         # TODO: Handle errors properly somehow
         abort( 500 )
     try:
-        GetAuthService( service ).ProcessAuthResponse( request.args[ 'code' ] )
+        authService = GetAuthService( service )
+        service = authService.ProcessAuthResponse( request.args[ 'code' ] )
+        return "UserId: {0}".format( service.GetUserEmail() )
     except OAuthException:
         abort( 500 )
     except KeyError:
         abort( 500 )
+    # TODO: Handle the various other error types here
 
 if __name__ == "__main__":
     app.run()

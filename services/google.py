@@ -5,19 +5,18 @@ from urllib import urlencode
 from .errors import OAuthException, ServiceError, UnknownResponse
 
 
-class FacebookService(object):
+class GoogleService(object):
     '''
-    Class responsible for dealing with facebook API requests
+    Class responsible for dealing with Google API requests
     '''
-    GRAPH_URL = 'https://graph.facebook.com'
-    ME_URL = GRAPH_URL + '/me'
+    ME_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
 
     def __init__(self, accessToken):
         '''
         Constructor
 
         Params:
-            accessToken   A valid access token for the facebook API
+            accessToken   A valid access token for the google API
         '''
         if not accessToken:
             raise Exception( "Access token must not be empty" )
@@ -25,19 +24,19 @@ class FacebookService(object):
 
     def _AppendAccessKey(self, url):
         '''
-        Utility function that appends an access key to the facebook URL
+        Utility function that appends an access key to the google URL
         '''
         return url + '?' + urlencode({ 'access_token': self.accessToken })
 
     def GetUserEmail(self):
         '''
-        Gets the users email
+        Gets the users ID
 
         Returns:
-            The users email from facebook
+            The users email from google
         Raises:
             URLError        On communication error
-            OAuthException  On OAuth error from facebook
+            OAuthException  On OAuth error from google
             ServiceError    On unknown remote error
             UnknownResponse On unknown server response
         '''
@@ -48,8 +47,9 @@ class FacebookService(object):
         remoteResource.close()
         data = json.loads( data )
         if 'error' in data:
-            if data[ 'error' ][ 'type' ] == 'OAuthException':
-                raise OAuthException( data[ 'error' ][ 'message' ] )
+            for err in data[ 'error' ][ 'errors' ]:
+                if err[ 'domain' ] == 'com.google.auth':
+                    raise OAuthException( err[ 'message' ] )
             raise ServiceError( data[ 'error' ][ 'message' ] )
         #TODO: It would probably be quite nice to cache the response
         #       in case it's needed for other queries etc.
@@ -58,5 +58,5 @@ class FacebookService(object):
             return data[ 'email' ]
         except KeyError:
             raise UnknownResponse(
-                    "Unknown response from facebook {0}".format( data )
+                    "Unknown response from google {0}".format( data )
                     )

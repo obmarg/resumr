@@ -1,6 +1,8 @@
 
 from rauth.service import OAuth2Service
 from .errors import OAuthException
+from .facebook import FacebookService
+from .google import GoogleService
 
 __all__ = [ 'SERVICES_AVALIABLE', 'GetAuthService' ]
 
@@ -12,7 +14,10 @@ class BaseOAuth2(object):
     dealt with by the rauth library
     '''
 
-    def __init__(self, name, config, redirect_uri, scopes, **kwargs):
+    def __init__(
+            self, name, config, redirect_uri, scopes,
+            serviceClass, **kwargs
+            ):
         '''
         Constructor
 
@@ -21,12 +26,14 @@ class BaseOAuth2(object):
             config              Config object to extract configuration from
             redirect_uri        The uri for the service to redirect to
             scopes              The scopes to request during auth
+            serviceClass        The service class to create after auth
             authorize_url       The url for authorizing
             access_token_url    The url for obtaining an access token
                                 from an authorization code
         '''
         self.redirect_uri = redirect_uri
         self.scopes = scopes
+        self.serviceClass = serviceClass
         upperName = name.upper()
         oAuthKeyName = upperName + '_OAUTH_KEY'
         oAuthSecretName = upperName + '_OAUTH_SECRET'
@@ -61,6 +68,8 @@ class BaseOAuth2(object):
         '''
         Processes an authorization response
 
+        Returns:
+            A Service object
         Params:
             auth_code   The auth code supplied by the client
         Raises:
@@ -76,7 +85,8 @@ class BaseOAuth2(object):
                 rv.content[ 'error' ]
                 ) )
         try:
-            self.accessToken = rv.content[ 'access_token' ]
+            accessToken = rv.content[ 'access_token' ]
+            return self.serviceClass( accessToken )
         except KeyError:
             raise OAuthException( "No access token in response" )
 
@@ -96,20 +106,22 @@ class FacebookAuthService(BaseOAuth2):
 
 _serviceInfo = {}
 _serviceInfo[ 'google' ] = {
-        'serviceClass': BaseOAuth2,
+        'authClass': BaseOAuth2,
+        'serviceClass': GoogleService,
         'authorize_url': 'https://accounts.google.com/o/oauth2/auth',
         'access_token_url': 'https://accounts.google.com/o/oauth2/token',
         'scopes': 'https://www.googleapis.com/auth/userinfo#email'
         }
 _serviceInfo[ 'facebook' ] = {
-        'serviceClass': FacebookAuthService,
+        'authClass': FacebookAuthService,
+        'serviceClass': FacebookService,
         'authorize_url': 'https://www.facebook.com/dialog/oauth',
         'access_token_url': 'https://graph.facebook.com/oauth/access_token',
-        'scopes': ''
+        'scopes': 'email'
         }
 
 SERVICES_AVALIABLE = _serviceInfo.keys()
-_services = {}
+_authServices = {}
 
 
 def GetAuthService(name, config=None, redirect_url=None):
@@ -124,9 +136,9 @@ def GetAuthService(name, config=None, redirect_url=None):
         config          The configuration to setup the service with
         redirect_url    The url to redirect users to after they've authed
     '''
-    global _services
+    global _authServices
     try:
-        return _services[ name ]
+        return _authServices[ name ]
     except KeyError:
         try:
             serviceInfo = _serviceInfo[ name ]
@@ -137,10 +149,10 @@ def GetAuthService(name, config=None, redirect_url=None):
                     'GetService needs to be called with all parameters'
                     'at least once for service {0}'.format( name )
                     )
-        _services[ name ] = serviceInfo[ 'serviceClass' ](
+        _authServices[ name ] = serviceInfo[ 'authClass' ](
                 name,
                 config,
                 redirect_url,
                 **serviceInfo
                 )
-        return _services[ name ]
+        return _authServices[ name ]
