@@ -7,6 +7,8 @@ from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
 
 class DefaultConfig(object):
+    SERVER_NAME=''
+    SECRET_KEY=''
     DEBUG = False
     TESTING = False
 
