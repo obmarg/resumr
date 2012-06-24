@@ -1,6 +1,8 @@
 
 from rauth.service import OAuth2Service
 
+__all__ = [ 'SERVICES_AVALIABLE', 'GetService' ]
+
 
 class BaseOAuth2(OAuth2Service):
     '''
@@ -27,8 +29,8 @@ class BaseOAuth2(OAuth2Service):
         try:
             super( BaseOAuth2, self ).__init__(
                     name=name,
-                    authorize_url='',
-                    access_token_url='',
+                    authorize_url=kwargs[ 'authorize_url' ],
+                    access_token_url=kwargs[ 'access_token_url' ],
                     consumer_key=config[ oAuthKeyName ],
                     consumer_secret=config[ oAuthSecretName ]
                     )
@@ -91,6 +93,7 @@ _serviceInfo[ 'facebook' ] = {
         'access_token_url': 'https://graph.facebook.com/oauth/access_token'
         }
 
+SERVICES_AVALIABLE = _serviceInfo.keys()
 _services = {}
 
 

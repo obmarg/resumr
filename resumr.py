@@ -2,7 +2,7 @@ import json
 import markdown
 from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
-from auth.services import GetService
+from auth.services import GetService, SERVICES_AVALIABLE
 
 app = Flask(__name__)
 
@@ -161,7 +161,12 @@ def Render():
 
 @app.route('/login')
 def Login():
-    return render_template('login.html')
+    # TODO: Add a state into the auth url stuff
+    services = [
+            { 'name': s, 'url': GetService( s ).get_authorize_url() }
+            for s in SERVICES_AVALIABLE
+            ]
+    return render_template('login.html', services=services)
 
 
 @app.route('/login/auth/<service>')
@@ -183,12 +188,9 @@ if __name__ == "__main__":
     app.config.from_envvar('RESUMR_SETTINGS', silent=True)
     # Set up the services
     oAuthUrl = '/login/auth/{}'
-    GetService(
-            'facebook', app.config,
-            oAuthUrl.format( 'facebook' )
-            )
-    GetService(
-            'google', app.config,
-            oAuthUrl.format( 'google' )
-            )
+    for name in SERVICES_AVALIABLE:
+        GetService(
+                name, app.config,
+                oAuthUrl.format( name )
+                )
     app.run()
