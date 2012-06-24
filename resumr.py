@@ -192,7 +192,7 @@ if __name__ == "__main__":
         DEBUG = False
         TESTING = False
     app.config.from_object(DefaultConfig)
-    app.config.from_envvar('RESUMR_SETTINGS', silent=True)
+    app.config.from_envvar('RESUMR_CONFIG', silent=True)
     # Set up the services
     oAuthUrl = '/login/auth/{}'
     for name in SERVICES_AVALIABLE:
