@@ -40,7 +40,7 @@ class BaseOAuth2(OAuth2Service):
                     )
         except KeyError:
             raise Exception(
-                    "You must provide {} and {} in the config".format(
+                    "You must provide {0} and {1} in the config".format(
                         oAuthKeyName, oAuthSecretName
                         ) )
 
@@ -74,7 +74,7 @@ class BaseOAuth2(OAuth2Service):
                 }
         rv = super( BaseOAuth2, self ).get_access_token( data=data )
         if "error" in rv:
-            raise OAuthException( "OAuth Service returned error - {}".format(
+            raise OAuthException( "OAuth Service returned error - {0}".format(
                 rv[ 'error' ]
                 ) )
         try:
@@ -131,11 +131,11 @@ def GetService(name, config=None, redirect_url=None):
         try:
             serviceInfo = _serviceInfo[ name ]
         except KeyError:
-            raise Exception( 'No such service: {}'.format( name ) )
+            raise Exception( 'No such service: {0}'.format( name ) )
         if config is None or redirect_url is None:
             raise Exception(
                     'GetService needs to be called with all parameters'
-                    'at least once for service {}'.format( name )
+                    'at least once for service {0}'.format( name )
                     )
         _services[ name ] = serviceInfo[ 'serviceClass' ](
                 name,

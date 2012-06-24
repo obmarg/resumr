@@ -4,7 +4,28 @@ from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
 from auth.services import GetService, SERVICES_AVALIABLE, OAuthException
 
-app = Flask(__name__)
+
+class DefaultConfig(object):
+    DEBUG = False
+    TESTING = False
+
+
+class ResumrApp(Flask):
+    def __init__(self):
+        super( ResumrApp, self ).__init__(__name__)
+
+        self.config.from_object(DefaultConfig)
+        self.config.from_envvar('RESUMR_CONFIG', silent=True)
+        # Set up the services
+        oAuthUrl = '/login/auth/{0}'
+        for name in SERVICES_AVALIABLE:
+            GetService(
+                    name, self.config,
+                    oAuthUrl.format( name )
+                    )
+
+
+app = ResumrApp()
 
 docName = 'test'
 
@@ -181,23 +202,11 @@ def OAuthCallback(service):
         # TODO: Handle errors properly somehow
         abort( 500 )
     try:
-        GetService( service ).get_access_token( request.args[ 'code' ] )
+        return GetService( service ).get_access_token( request.args[ 'code' ] )
     except OAuthException:
         abort( 500 )
     except KeyError:
         abort( 500 )
 
 if __name__ == "__main__":
-    class DefaultConfig(object):
-        DEBUG = False
-        TESTING = False
-    app.config.from_object(DefaultConfig)
-    app.config.from_envvar('RESUMR_CONFIG', silent=True)
-    # Set up the services
-    oAuthUrl = '/login/auth/{}'
-    for name in SERVICES_AVALIABLE:
-        GetService(
-                name, app.config,
-                oAuthUrl.format( name )
-                )
     app.run()
