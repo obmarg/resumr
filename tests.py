@@ -15,6 +15,8 @@ from flask import session
 class ResumrTests(TestCase):
 
     def create_app(self):
+        resumr.app.config['SERVER_NAME'] = 'localhost:5000'
+        resumr.app.config['SECRET_KEY'] = 'testsecret'
         resumr.app.config['TESTING'] = True
         resumr.app.testing = True
         return resumr.app
