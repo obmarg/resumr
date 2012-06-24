@@ -407,9 +407,21 @@ class ResumrTests(TestCase):
         self.assertRedirects( rv, '/login' )
 
     def testLogin(self):
+        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
+        resumr.IsLoggedIn().AndReturn( False )
+        self.mox.ReplayAll()
         rv = self.client.get( '/login' )
+        self.mox.VerifyAll()
         self.assert200( rv )
         self.assertTemplateUsed( 'login.html' )
+
+    def testLoginAlready(self):
+        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
+        resumr.IsLoggedIn().AndReturn( True )
+        self.mox.ReplayAll()
+        rv = self.client.get( '/login' )
+        self.mox.VerifyAll()
+        self.assertRedirects( rv, '/' )
 
     def testOAuthCallback(self):
         self.mox.StubOutWithMock( resumr, 'GetAuthService' )

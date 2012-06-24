@@ -209,6 +209,8 @@ def Render():
 
 @app.route('/login')
 def Login():
+    if IsLoggedIn():
+        return redirect( url_for( 'index' ) )
     # TODO: Add a state into the auth url stuff
     services = [
             { 'name': s, 'url': GetAuthService( s ).GetAuthUrl() }
