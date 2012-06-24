@@ -219,6 +219,14 @@ def Login():
     return render_template('login.html', services=services)
 
 
+@app.route('/logout')
+def Logout():
+    if IsLoggedIn():
+        del session['regType']
+        del session['email']
+    return redirect( url_for( 'Login' ) )
+
+
 @app.route('/login/auth/<serviceName>')
 def OAuthCallback(serviceName):
     '''
