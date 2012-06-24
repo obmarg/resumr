@@ -4,11 +4,12 @@ import json
 import unittest
 import mox
 from StringIO import StringIO
-from db import Section, Document, SectionNotFound
+from db import Section, Document, SectionNotFound, RepoNotFound
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
 from flaskext.testing import TestCase
+from flask import session
 
 
 class ResumrTests(TestCase):
@@ -25,18 +26,98 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.mox.UnsetStubs()
 
-    def testGetDoc(self):
+    def assertRedirects(self, response, location):
+        """
+        Checks if response is an HTTP redirect to the
+        given location.
+
+        :param response: Flask response
+        :param location: relative URL (i.e. without **http://localhost**)
+        """
+        self.assertTrue(response.status_code in (301, 302, 303))
+        self.assertEqual(response.location, "http://localhost:5000" + location)
+
+    def testIsLoggedIn(self):
+        with resumr.app.test_request_context('/'):
+            resumr.app.preprocess_request()
+            session.new = False
+            session[ 'email' ] = 'something'
+            assert resumr.IsLoggedIn()
+
+    def testNotLoggedIn(self):
+        with resumr.app.test_request_context('/'):
+            resumr.app.preprocess_request()
+            assert not resumr.IsLoggedIn()
+
+    def testGetDocLoggedIn(self):
         self.mox.StubOutClassWithMocks(resumr, 'Document')
-        d = resumr.Document( 'test' )
+        d = resumr.Document( 'facebook - something' )
 
         self.mox.ReplayAll()
-        self.assertIs( resumr.GetDoc(), d )
+        with resumr.app.test_request_context('/'):
+            resumr.app.preprocess_request()
+            session.new = False
+            session[ 'email' ] = 'something'
+            session[ 'regType' ] = 'facebook'
+            self.assertIs( resumr.GetDoc(), d )
+        self.mox.VerifyAll()
+
+    def testGetDocNotLoggedIn(self):
+        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
+        self.mox.StubOutWithMock(resumr, 'abort')
+        resumr.IsLoggedIn().AndReturn( False )
+        resumr.abort( 401 ).AndRaise( Exception )
+
+        self.mox.ReplayAll()
+        with self.assertRaises( Exception ):
+            resumr.GetDoc()
+        self.mox.VerifyAll()
+
+    def testGetDocMissingKeys(self):
+        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
+        self.mox.StubOutWithMock(resumr, 'abort')
+        resumr.IsLoggedIn().AndReturn( True )
+        resumr.abort( 401 ).AndRaise( Exception )
+
+        self.mox.ReplayAll()
+        with resumr.app.test_request_context('/'):
+            resumr.app.preprocess_request()
+            with self.assertRaises( Exception ):
+                resumr.GetDoc()
+        self.mox.VerifyAll()
+
+    def testGetDocCreateRequired(self):
+        self.mox.StubOutWithMock(resumr, 'Document' )
+        resumr.Document( 'facebook - something' ).AndRaise( RepoNotFound )
+        resumr.Document( 'facebook - something', create=True ).AndReturn(
+                'document'
+                )
+
+        self.mox.ReplayAll()
+        with resumr.app.test_request_context('/'):
+            resumr.app.preprocess_request()
+            session.new = False
+            session[ 'email' ] = 'something'
+            session[ 'regType' ] = 'facebook'
+            self.assertEqual( resumr.GetDoc(), 'document' )
         self.mox.VerifyAll()
 
     def testIndex(self):
+        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
+        resumr.IsLoggedIn().AndReturn( True )
+        self.mox.ReplayAll()
         rv = self.client.get('/')
+        self.mox.VerifyAll()
         self.assert200( rv )
         self.assertTemplateUsed( 'index.html' )
+
+    def testIndexNotLoggedIn(self):
+        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
+        resumr.IsLoggedIn().AndReturn( False )
+        self.mox.ReplayAll()
+        rv = self.client.get('/')
+        self.mox.VerifyAll()
+        self.assertRedirects( rv, '/login' )
 
     def testListSections(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
@@ -282,9 +363,11 @@ class ResumrTests(TestCase):
         self.assert404( rv )
 
     def testRender(self):
+        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
         self.mox.StubOutWithMock( resumr.markdown, 'markdown' )
-
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
+
+        resumr.IsLoggedIn().AndReturn( True )
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
@@ -314,6 +397,15 @@ class ResumrTests(TestCase):
         for text in expected:
             self.assertIn( text, rv.data )
 
+    def testRenderNotLoggedIn(self):
+        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
+        resumr.IsLoggedIn().AndReturn( False )
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/render' )
+        self.mox.VerifyAll()
+        self.assertRedirects( rv, '/login' )
+
     def testLogin(self):
         rv = self.client.get( '/login' )
         self.assert200( rv )
@@ -326,15 +418,17 @@ class ResumrTests(TestCase):
 
         resumr.GetAuthService( 'facebook' ).AndReturn( authService )
         authService.ProcessAuthResponse( 'auth_code' ).AndReturn( service )
-        service.GetUserEmail().AndReturn( 'uid' )
+        service.GetUserEmail().AndReturn( 'someone@somewhere' )
 
         self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'code': 'auth_code' }
-                )
+        with self.client as client:
+            rv = client.get(
+                    '/login/auth/facebook',
+                    query_string={ 'code': 'auth_code' }
+                    )
+            self.assertEqual( 'someone@somewhere', session[ 'email' ] )
         self.mox.VerifyAll()
-        self.assert200( rv )
+        self.assertRedirects( rv, '/' )
 
     def testOAuthError(self):
         self.mox.ReplayAll()

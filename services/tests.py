@@ -108,7 +108,7 @@ class BaseOAuth2Tests(BaseTest):
         s = self.doConstructor()
         service = s.ProcessAuthResponse( 'auth_code' )
         self.mox.VerifyAll()
-        self.assertEqual( gService, service )
+        self.assertIs( gService, service )
 
     def testProcessResponseError(self):
         s = self.createMockService()
@@ -175,7 +175,7 @@ class FacebookAuthTests(BaseTest):
 
         service = s.ProcessAuthResponse( 'auth_code' )
         self.mox.VerifyAll()
-        self.assertEqual( fbService, service )
+        self.assertIs( fbService, service )
 
 
 # TODO: Write GetAuthService tests
