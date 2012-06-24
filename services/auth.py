@@ -1,17 +1,15 @@
 
 from rauth.service import OAuth2Service
+from .errors import OAuthException
 
-__all__ = [ 'SERVICES_AVALIABLE', 'GetService', 'OAuthException' ]
-
-
-class OAuthException(Exception):
-    pass
+__all__ = [ 'SERVICES_AVALIABLE', 'GetAuthService' ]
 
 
-class BaseOAuth2(OAuth2Service):
+class BaseOAuth2(object):
     '''
-    BaseOAuth2 class that handles functionality common to
-    OAuth2Services, that isn't covered by the rauth library
+    BaseOAuth2 class that wraps the rauth library and
+    handles functionality common to OAuth2Services, that isn't
+    dealt with by the rauth library
     '''
 
     def __init__(self, name, config, redirect_uri, scopes, **kwargs):
@@ -33,7 +31,7 @@ class BaseOAuth2(OAuth2Service):
         oAuthKeyName = upperName + '_OAUTH_KEY'
         oAuthSecretName = upperName + '_OAUTH_SECRET'
         try:
-            super( BaseOAuth2, self ).__init__(
+            self.service = OAuth2Service(
                     name=name,
                     authorize_url=kwargs[ 'authorize_url' ],
                     access_token_url=kwargs[ 'access_token_url' ],
@@ -46,27 +44,25 @@ class BaseOAuth2(OAuth2Service):
                         oAuthKeyName, oAuthSecretName
                         ) )
 
-    def get_authorize_url(self, state=''):
+    def GetAuthUrl(self, state=''):
         '''
         Gets the authorize url
 
         Params:
             state   Optional state variable to use in the url
         '''
-        return super( BaseOAuth2, self ).get_authorize_url(
+        return self.service.get_authorize_url(
                 redirect_uri=self.redirect_uri,
                 scope=self.scopes,
                 state=state
                 )
 
-    def get_access_token(self, auth_code):
+    def ProcessAuthResponse(self, auth_code, **kwargs):
         '''
-        Gets the access token from the authorization code
+        Processes an authorization response
 
         Params:
             auth_code   The auth code supplied by the client
-        Returns:
-            The access token of the client
         Raises:
             An OAuthException on error
         '''
@@ -74,18 +70,18 @@ class BaseOAuth2(OAuth2Service):
                 'code': auth_code,
                 'redirect_uri': self.redirect_uri
                 }
-        rv = super( BaseOAuth2, self ).get_access_token( data=data )
+        rv = self.service.get_access_token( data=data, **kwargs )
         if "error" in rv.content:
             raise OAuthException( "OAuth Service returned error - {0}".format(
                 rv.content[ 'error' ]
                 ) )
         try:
-            return rv.content[ 'access_token' ]
+            self.accessToken = rv.content[ 'access_token' ]
         except KeyError:
             raise OAuthException( "No access token in response" )
 
 
-class FacebookService(BaseOAuth2):
+class FacebookAuthService(BaseOAuth2):
     '''
     Facebook auth service
 
@@ -93,9 +89,9 @@ class FacebookService(BaseOAuth2):
     access token using GET instead of POST
     '''
 
-    def get_access_token(self, **kwargs):
-        return super( FacebookService, self ).get_access_token(
-                method='GET', **kwargs
+    def ProcessAuthResponse(self, *pargs, **kwargs):
+        return super( FacebookAuthService, self ).ProcessAuthResponse(
+                method='GET', *pargs, **kwargs
                 )
 
 _serviceInfo = {}
@@ -106,7 +102,7 @@ _serviceInfo[ 'google' ] = {
         'scopes': 'https://www.googleapis.com/auth/userinfo#email'
         }
 _serviceInfo[ 'facebook' ] = {
-        'serviceClass': FacebookService,
+        'serviceClass': FacebookAuthService,
         'authorize_url': 'https://www.facebook.com/dialog/oauth',
         'access_token_url': 'https://graph.facebook.com/oauth/access_token',
         'scopes': ''
@@ -116,9 +112,9 @@ SERVICES_AVALIABLE = _serviceInfo.keys()
 _services = {}
 
 
-def GetService(name, config=None, redirect_url=None):
+def GetAuthService(name, config=None, redirect_url=None):
     '''
-    Returns a service
+    Returns an auth service
 
     This must be called at least once with all arguments.
     After that, config & redirect_url are optional and will be ignored

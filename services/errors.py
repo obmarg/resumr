@@ -1,0 +1,4 @@
+
+
+class OAuthException(Exception):
+    pass

@@ -2,7 +2,7 @@ import json
 import markdown
 from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
-from auth.services import GetService, SERVICES_AVALIABLE, OAuthException
+from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
 
 class DefaultConfig(object):
@@ -19,7 +19,7 @@ class ResumrApp(Flask):
         # Set up the services
         oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
         for name in SERVICES_AVALIABLE:
-            GetService(
+            GetAuthService(
                     name, self.config,
                     oAuthUrl.format( name )
                     )
@@ -184,7 +184,7 @@ def Render():
 def Login():
     # TODO: Add a state into the auth url stuff
     services = [
-            { 'name': s, 'url': GetService( s ).get_authorize_url() }
+            { 'name': s, 'url': GetAuthService( s ).GetAuthUrl() }
             for s in SERVICES_AVALIABLE
             ]
     return render_template('login.html', services=services)
@@ -202,7 +202,7 @@ def OAuthCallback(service):
         # TODO: Handle errors properly somehow
         abort( 500 )
     try:
-        return GetService( service ).get_access_token( request.args[ 'code' ] )
+        GetAuthService( service ).ProcessAuthResponse( request.args[ 'code' ] )
     except OAuthException:
         abort( 500 )
     except KeyError:
