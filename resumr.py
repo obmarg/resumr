@@ -2,6 +2,7 @@ import json
 import markdown
 from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
+from auth.services import GetService
 
 app = Flask(__name__)
 
@@ -163,5 +164,31 @@ def Login():
     return render_template('login.html')
 
 
+@app.route('/login/auth/<service>')
+def OAuthCallback(service):
+    '''
+    OAuth services should redirect the user to this url after auth
+
+    Params:
+        service     The name of the service the user is authenticating with
+    '''
+    #TODO: Fill me in
+    pass
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    class DefaultConfig(object):
+        DEBUG = False
+        TESTING = False
+    app.config.from_object(DefaultConfig)
+    app.config.from_envvar('RESUMR_SETTINGS', silent=True)
+    # Set up the services
+    oAuthUrl = '/login/auth/{}'
+    GetService(
+            'facebook', app.config,
+            oAuthUrl.format( 'facebook' )
+            )
+    GetService(
+            'google', app.config,
+            oAuthUrl.format( 'google' )
+            )
+    app.run()

@@ -21,14 +21,22 @@ class BaseOAuth2(OAuth2Service):
                                 from an authorization code
         '''
         self.redirect_uri = redirect_uri
-        upperName = config.upper()
-        super( BaseOAuth2, self ).__init__(
-                name=name,
-                authorize_url='',
-                access_token_url='',
-                consumer_key=config[ upperName + '_OAUTH_KEY' ],
-                consumer_secret=config[ upperName + '_OAUTH_SECRET' ]
-                )
+        upperName = name.upper()
+        oAuthKeyName = upperName + '_OAUTH_KEY'
+        oAuthSecretName = upperName + '_OAUTH_SECRET'
+        try:
+            super( BaseOAuth2, self ).__init__(
+                    name=name,
+                    authorize_url='',
+                    access_token_url='',
+                    consumer_key=config[ oAuthKeyName ],
+                    consumer_secret=config[ oAuthSecretName ]
+                    )
+        except KeyError:
+            raise Exception(
+                    "You must provide {} and {} in the config".format(
+                        oAuthKeyName, oAuthSecretName
+                        ) )
 
     def get_authorize_url(self, state=''):
         '''
@@ -70,32 +78,51 @@ class FacebookService(BaseOAuth2):
                 method='GET', **kwargs
                 )
 
-_googleService = None
-_facebookService = None
+
+_serviceInfo = {}
+_serviceInfo[ 'google' ] = {
+        'serviceClass': BaseOAuth2,
+        'authorize_url': 'https://accounts.google.com/o/oauth2/auth',
+        'access_token_url': 'https://accounts.google.com/o/oauth2/token'
+        }
+_serviceInfo[ 'facebook' ] = {
+        'serviceClass': FacebookService,
+        'authorize_url': 'https://www.facebook.com/dialog/oauth',
+        'access_token_url': 'https://graph.facebook.com/oauth/access_token'
+        }
+
+_services = {}
 
 
-def GetGoogleService(config, redirect_url):
-    global _googleService
-    if _googleService is None:
-        _googleService = BaseOAuth2(
-                'google',
+def GetService(name, config=None, redirect_url=None):
+    '''
+    Returns a service
+
+    This must be called at least once with all arguments.
+    After that, config & redirect_url are optional and will be ignored
+
+    Params:
+        name            The name of the service
+        config          The configuration to setup the service with
+        redirect_url    The url to redirect users to after they've authed
+    '''
+    global _services
+    try:
+        return _services[ name ]
+    except KeyError:
+        try:
+            serviceInfo = _serviceInfo[ name ]
+        except KeyError:
+            raise Exception( 'No such service: {}'.format( name ) )
+        if config is None or redirect_url is None:
+            raise Exception(
+                    'GetService needs to be called with all parameters'
+                    'at least once for service {}'.format( name )
+                    )
+        _services[ name ] = serviceInfo[ 'serviceClass' ](
+                name,
                 config,
                 redirect_url,
-                authorize_url='https://accounts.google.com/o/oauth2/auth',
-                access_token_url='https://accounts.google.com/o/oauth2/token'
+                **serviceInfo
                 )
-    return _googleService
-
-
-def GetFacebookService(config, redirect_url):
-    global _facebookService
-    if _facebookService is None:
-        _facebookService = FacebookService(
-                'facebook',
-                config,
-                redirect_url,
-                authorize_url='https://www.facebook.com/dialog/oauth',
-                access_token_url='https://graph.facebook.com/oauth/access_token'
-                )
-    return _facebookService
-
+        return _services[ name ]
