@@ -18,7 +18,6 @@ define(
         if @model?
           @bindTo( @model, 'change', @render, @ )
 
-
       serializeData: () ->
         return content: @converter.makeHtml( 
           @model.get( 'content' ) 

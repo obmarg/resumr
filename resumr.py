@@ -1,20 +1,67 @@
 import json
 import markdown
-from flask import Flask, render_template, abort, request
-from db import Document, SectionNotFound
+from flask import Flask, render_template, abort, request, session
+from flask import redirect, url_for
+from db import Document, SectionNotFound, RepoNotFound
+from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
-app = Flask(__name__)
 
-docName = 'test'
+class DefaultConfig(object):
+    DEBUG = False
+    TESTING = False
+
+
+class ResumrApp(Flask):
+    def __init__(self):
+        super( ResumrApp, self ).__init__(__name__)
+
+        self.config.from_object(DefaultConfig)
+        self.config.from_envvar('RESUMR_CONFIG', silent=True)
+        # Set up the services
+        oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
+        for name in SERVICES_AVALIABLE:
+            GetAuthService(
+                    name, self.config,
+                    oAuthUrl.format( name )
+                    )
+
+
+app = ResumrApp()
+
+
+def IsLoggedIn():
+    '''
+    Function that checks if we're logged in
+
+    Returns:
+        True if we are, False otherwise
+    '''
+    if session.new or 'email' not in session:
+        return False
+    return True
 
 
 def GetDoc():
-    return Document( docName )
+    if not IsLoggedIn():
+        abort( 401 )
+    try:
+        docName = '{0} - {1}'.format(
+                session[ 'regType' ], session[ 'email' ]
+                )
+    except KeyError:
+        # Seems like we're not logged in after all :(
+        abort( 401 )
+    try:
+        return Document( docName )
+    except RepoNotFound:
+        return Document( docName, create=True )
 
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+    if IsLoggedIn():
+        return render_template('index.html')
+    return redirect( url_for( 'Login' ) )
 
 
 @app.route('/api/sections', methods=['GET'])
@@ -149,6 +196,8 @@ def SelectSectionHistory( name, historyId ):
 
 @app.route('/render')
 def Render():
+    if not IsLoggedIn():
+        return redirect( url_for( 'Login' ) )
     d = GetDoc()
     sections = [ s for i, s in d.CurrentSections() ]
     sections = [ markdown.markdown( s.CurrentContent() ) for s in sections ]
@@ -157,5 +206,51 @@ def Render():
             sections=sections
             )
 
+
+@app.route('/login')
+def Login():
+    if IsLoggedIn():
+        return redirect( url_for( 'index' ) )
+    # TODO: Add a state into the auth url stuff
+    services = [
+            { 'name': s, 'url': GetAuthService( s ).GetAuthUrl() }
+            for s in SERVICES_AVALIABLE
+            ]
+    return render_template('login.html', services=services)
+
+
+@app.route('/logout')
+def Logout():
+    if IsLoggedIn():
+        del session['regType']
+        del session['email']
+    return redirect( url_for( 'Login' ) )
+
+
+@app.route('/login/auth/<serviceName>')
+def OAuthCallback(serviceName):
+    '''
+    OAuth services should redirect the user to this url after auth
+
+    Params:
+        serviceName     The name of the service the user is authenticating with
+    '''
+    if "error" in request.args:
+        # TODO: Handle errors properly somehow
+        abort( 500 )
+    try:
+        authService = GetAuthService( serviceName )
+        remoteService = authService.ProcessAuthResponse(
+                request.args[ 'code' ]
+                )
+        session[ 'regType' ] = serviceName
+        session[ 'email' ] = remoteService.GetUserEmail()
+        return redirect(url_for( 'index' ))
+    except OAuthException:
+        abort( 500 )
+    except KeyError:
+        abort( 500 )
+    # TODO: Handle the various other error types here
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
