@@ -7,10 +7,14 @@ from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
 
 class DefaultConfig(object):
-    SERVER_NAME=''
-    SECRET_KEY=''
+    SERVER_NAME = ''
+    SECRET_KEY = ''
     DEBUG = False
     TESTING = False
+    FACEBOOK_OAUTH_KEY = ''
+    FACEBOOK_OAUTH_SECRET = ''
+    GOOGLE_OAUTH_KEY = ''
+    GOOGLE_OAUTH_SECRET = ''
 
 
 class ResumrApp(Flask):
