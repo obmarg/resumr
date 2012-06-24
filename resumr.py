@@ -17,7 +17,7 @@ class ResumrApp(Flask):
         self.config.from_object(DefaultConfig)
         self.config.from_envvar('RESUMR_CONFIG', silent=True)
         # Set up the services
-        oAuthUrl = '/login/auth/{0}'
+        oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
         for name in SERVICES_AVALIABLE:
             GetService(
                     name, self.config,

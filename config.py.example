@@ -1,3 +1,4 @@
+SERVER_NAME = ''
 DEBUG = False
 TESTING = False
 FACEBOOK_OAUTH_KEY=''

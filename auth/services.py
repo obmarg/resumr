@@ -14,7 +14,7 @@ class BaseOAuth2(OAuth2Service):
     OAuth2Services, that isn't covered by the rauth library
     '''
 
-    def __init__(self, name, config, redirect_uri, **kwargs):
+    def __init__(self, name, config, redirect_uri, scopes, **kwargs):
         '''
         Constructor
 
@@ -22,11 +22,13 @@ class BaseOAuth2(OAuth2Service):
             name                The name of this service
             config              Config object to extract configuration from
             redirect_uri        The uri for the service to redirect to
+            scopes              The scopes to request during auth
             authorize_url       The url for authorizing
             access_token_url    The url for obtaining an access token
                                 from an authorization code
         '''
         self.redirect_uri = redirect_uri
+        self.scopes = scopes
         upperName = name.upper()
         oAuthKeyName = upperName + '_OAUTH_KEY'
         oAuthSecretName = upperName + '_OAUTH_SECRET'
@@ -53,7 +55,7 @@ class BaseOAuth2(OAuth2Service):
         '''
         return super( BaseOAuth2, self ).get_authorize_url(
                 redirect_uri=self.redirect_uri,
-                scope='',
+                scope=self.scopes,
                 state=state
                 )
 
@@ -73,12 +75,12 @@ class BaseOAuth2(OAuth2Service):
                 'redirect_uri': self.redirect_uri
                 }
         rv = super( BaseOAuth2, self ).get_access_token( data=data )
-        if "error" in rv:
+        if "error" in rv.content:
             raise OAuthException( "OAuth Service returned error - {0}".format(
-                rv[ 'error' ]
+                rv.content[ 'error' ]
                 ) )
         try:
-            return rv[ 'access_token' ]
+            return rv.content[ 'access_token' ]
         except KeyError:
             raise OAuthException( "No access token in response" )
 
@@ -100,12 +102,14 @@ _serviceInfo = {}
 _serviceInfo[ 'google' ] = {
         'serviceClass': BaseOAuth2,
         'authorize_url': 'https://accounts.google.com/o/oauth2/auth',
-        'access_token_url': 'https://accounts.google.com/o/oauth2/token'
+        'access_token_url': 'https://accounts.google.com/o/oauth2/token',
+        'scopes': 'https://www.googleapis.com/auth/userinfo#email'
         }
 _serviceInfo[ 'facebook' ] = {
         'serviceClass': FacebookService,
         'authorize_url': 'https://www.facebook.com/dialog/oauth',
-        'access_token_url': 'https://graph.facebook.com/oauth/access_token'
+        'access_token_url': 'https://graph.facebook.com/oauth/access_token',
+        'scopes': ''
         }
 
 SERVICES_AVALIABLE = _serviceInfo.keys()
