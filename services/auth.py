@@ -79,7 +79,12 @@ class BaseOAuth2(object):
                 'code': auth_code,
                 'redirect_uri': self.redirect_uri
                 }
-        rv = self.service.get_access_token( data=data, **kwargs )
+        if 'method' in kwargs and kwargs[ 'method' ] == 'GET':
+            kwargs[ 'params' ] = data
+        else:
+            kwargs[ 'data' ] = data
+        print "Sending data {0}".format( data )
+        rv = self.service.get_access_token( **kwargs )
         if "error" in rv.content:
             raise OAuthException( "OAuth Service returned error - {0}".format(
                 rv.content[ 'error' ]

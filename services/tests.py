@@ -158,7 +158,7 @@ class FacebookAuthTests(BaseTest):
                 )
         ResponseType = namedtuple( 'ResponseType', [ 'content' ] )
         response = ResponseType( content={ 'access_token': 'access' } )
-        s.get_access_token(method='GET', data={
+        s.get_access_token(method='GET', params={
             'code': 'auth_code', 'redirect_uri': 'redirect'
             }).AndReturn( response )
         fbService = auth.FacebookService( 'access' )
