@@ -2,7 +2,7 @@ import json
 import markdown
 from flask import Flask, render_template, abort, request
 from db import Document, SectionNotFound
-from auth.services import GetService, SERVICES_AVALIABLE
+from auth.services import GetService, SERVICES_AVALIABLE, OAuthException
 
 app = Flask(__name__)
 
@@ -177,8 +177,15 @@ def OAuthCallback(service):
     Params:
         service     The name of the service the user is authenticating with
     '''
-    #TODO: Fill me in
-    pass
+    if "error" in request.args:
+        # TODO: Handle errors properly somehow
+        abort( 500 )
+    try:
+        GetService( service ).get_access_token( request.args[ 'code' ] )
+    except OAuthException:
+        abort( 500 )
+    except KeyError:
+        abort( 500 )
 
 if __name__ == "__main__":
     class DefaultConfig(object):

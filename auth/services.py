@@ -1,7 +1,11 @@
 
 from rauth.service import OAuth2Service
 
-__all__ = [ 'SERVICES_AVALIABLE', 'GetService' ]
+__all__ = [ 'SERVICES_AVALIABLE', 'GetService', 'OAuthException' ]
+
+
+class OAuthException(Exception):
+    pass
 
 
 class BaseOAuth2(OAuth2Service):
@@ -59,12 +63,24 @@ class BaseOAuth2(OAuth2Service):
 
         Params:
             auth_code   The auth code supplied by the client
+        Returns:
+            The access token of the client
+        Raises:
+            An OAuthException on error
         '''
         data = {
                 'code': auth_code,
                 'redirect_uri': self.redirect_uri
                 }
-        return super( BaseOAuth2, self ).get_access_token( data=data )
+        rv = super( BaseOAuth2, self ).get_access_token( data=data )
+        if "error" in rv:
+            raise OAuthException( "OAuth Service returned error - {}".format(
+                rv[ 'error' ]
+                ) )
+        try:
+            return rv[ 'access_token' ]
+        except KeyError:
+            raise OAuthException( "No access token in response" )
 
 
 class FacebookService(BaseOAuth2):
@@ -79,7 +95,6 @@ class FacebookService(BaseOAuth2):
         return super( FacebookService, self ).get_access_token(
                 method='GET', **kwargs
                 )
-
 
 _serviceInfo = {}
 _serviceInfo[ 'google' ] = {
