@@ -15,6 +15,8 @@ class DefaultConfig(object):
     FACEBOOK_OAUTH_SECRET = ''
     GOOGLE_OAUTH_KEY = ''
     GOOGLE_OAUTH_SECRET = ''
+    BYPASS_LOGIN = False
+    BYPASS_REPO_NAME = 'test'
 
 
 class ResumrApp(Flask):
@@ -42,6 +44,8 @@ def IsLoggedIn():
     Returns:
         True if we are, False otherwise
     '''
+    if app.config[ 'BYPASS_LOGIN' ]:
+        return True
     if session.new or 'email' not in session:
         return False
     return True
@@ -50,13 +54,16 @@ def IsLoggedIn():
 def GetDoc():
     if not IsLoggedIn():
         abort( 401 )
-    try:
-        docName = '{0} - {1}'.format(
-                session[ 'regType' ], session[ 'email' ]
-                )
-    except KeyError:
-        # Seems like we're not logged in after all :(
-        abort( 401 )
+    if app.config[ 'BYPASS_LOGIN' ]:
+        docName = app.config[ 'BYPASS_REPO_NAME' ]
+    else:
+        try:
+            docName = '{0} - {1}'.format(
+                    session[ 'regType' ], session[ 'email' ]
+                    )
+        except KeyError:
+            # Seems like we're not logged in after all :(
+            abort( 401 )
     try:
         return Document( docName )
     except RepoNotFound:
