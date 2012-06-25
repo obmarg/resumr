@@ -17,6 +17,7 @@ class DefaultConfig(object):
     GOOGLE_OAUTH_SECRET = ''
     BYPASS_LOGIN = False
     BYPASS_REPO_NAME = 'test'
+    DATA_PATH = None
 
 
 class ResumrApp(Flask):
@@ -65,9 +66,11 @@ def GetDoc():
             # Seems like we're not logged in after all :(
             abort( 401 )
     try:
-        return Document( docName )
+        return Document( docName, rootPath=app.config[ 'DATA_PATH' ] )
     except RepoNotFound:
-        return Document( docName, create=True )
+        return Document(
+                docName, create=True, rootPath=app.config[ 'DATA_PATH' ]
+                )
 
 
 @app.route("/")

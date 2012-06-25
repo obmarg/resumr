@@ -53,7 +53,7 @@ class ResumrTests(TestCase):
 
     def testGetDocLoggedIn(self):
         self.mox.StubOutClassWithMocks(resumr, 'Document')
-        d = resumr.Document( 'facebook - something' )
+        d = resumr.Document( 'facebook - something', rootPath=None )
 
         self.mox.ReplayAll()
         with resumr.app.test_request_context('/'):
@@ -63,6 +63,23 @@ class ResumrTests(TestCase):
             session[ 'regType' ] = 'facebook'
             self.assertIs( resumr.GetDoc(), d )
         self.mox.VerifyAll()
+
+    def testGetDocWithRootPath(self):
+        self.mox.StubOutClassWithMocks(resumr, 'Document')
+        d = resumr.Document( 'facebook - something', rootPath='somewhere' )
+
+        self.mox.ReplayAll()
+        try:
+            resumr.app.config[ 'DATA_PATH' ] = 'somewhere'
+            with resumr.app.test_request_context('/'):
+                resumr.app.preprocess_request()
+                session.new = False
+                session[ 'email' ] = 'something'
+                session[ 'regType' ] = 'facebook'
+                self.assertIs( resumr.GetDoc(), d )
+            self.mox.VerifyAll()
+        finally:
+            resumr.app.config[ 'DATA_PATH' ] = None
 
     def testGetDocNotLoggedIn(self):
         self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
@@ -90,10 +107,12 @@ class ResumrTests(TestCase):
 
     def testGetDocCreateRequired(self):
         self.mox.StubOutWithMock(resumr, 'Document' )
-        resumr.Document( 'facebook - something' ).AndRaise( RepoNotFound )
-        resumr.Document( 'facebook - something', create=True ).AndReturn(
-                'document'
-                )
+        resumr.Document(
+                'facebook - something', rootPath=None
+                ).AndRaise( RepoNotFound )
+        resumr.Document(
+                'facebook - something', create=True, rootPath=None
+                ).AndReturn( 'document')
 
         self.mox.ReplayAll()
         with resumr.app.test_request_context('/'):

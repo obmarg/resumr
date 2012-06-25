@@ -8,7 +8,7 @@ from .constants import MASTER_REF, SECTION_REF_PREFIX
 from .constants import SECTION_INDEX_FILENAME
 from .errors import SectionNotFound, RepoNotFound
 
-rootPath = 'data'
+DEFAULT_ROOT_PATH = 'data'
 
 
 class Document(object):
@@ -17,16 +17,19 @@ class Document(object):
     database
     '''
 
-    def __init__( self, name, create=False ):
+    def __init__( self, name, create=False, rootPath=None ):
         '''
         Constructor
 
         Args:
-            name:   The name of the document
-            create: If true, will create a document
+            name        The name of the document
+            create      If true, will create a document
+            rootPath    The rootPath to use (if not supplied, uses default)
         Exceptions:
             RepoNotFound if repository isn't found
         '''
+        if not rootPath:
+            rootPath = DEFAULT_ROOT_PATH
         targetDir = os.path.join( rootPath, name + '.git' )
         if create:
             # Create a bare repository

@@ -18,12 +18,12 @@ class DocumentTests(BaseTest):
         self.mox.StubOutClassWithMocks(doc, 'Repository')
         self.mox.StubOutWithMock(doc, 'init_repository')
         self.mox.StubOutWithMock(doc, 'CommitBlob')
-        self.origRootPath = doc.rootPath
-        doc.rootPath = 'testPath'
+        self.origRootPath = doc.DEFAULT_ROOT_PATH
+        doc.DEFAULT_ROOT_PATH = 'testPath'
 
     def tearDown( self ):
         super( DocumentTests, self ).tearDown()
-        doc.rootPath = self.origRootPath
+        doc.DEFAULT_ROOT_PATH = self.origRootPath
 
     def _createMockRepo( self ):
         '''
@@ -68,6 +68,18 @@ class DocumentTests(BaseTest):
         doc.Document( 'name' )
 
         self.mox.VerifyAll()
+
+    def testConstructWithRootPath( self ):
+        '''
+        Tests construction when we supply a root path
+        '''
+        testPath = os.path.join( '/', 'something', 'otherPath' )
+        doc.Repository(
+                os.path.join( testPath, 'name.git' )
+                )
+
+        self.mox.ReplayAll()
+        doc.Document( 'name', rootPath=testPath )
 
     def testNoRepo( self ):
         '''
