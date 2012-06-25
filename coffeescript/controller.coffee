@@ -2,7 +2,7 @@ define(
   [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
   ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
     class Controller
-      constructor: (@page) ->
+      constructor: (@page, @vent) ->
         # Load Temporary test data
         content1 = $( '#tempData1' ).html()
         content2 = $( '#tempData2' ).html()
@@ -26,6 +26,7 @@ define(
           collection: @sectionList
         )
         layout.content.show( sectionListView )
+        @vent.trigger( 'changepage', 'sectionOverview' )
 
       sectionNew: (name) ->
         layout = new SectionEditor( model: new Section )
@@ -34,9 +35,11 @@ define(
             @sectionList.add( model )
             layout.unbindFrom( @newSectionBinding )
             @newSectionBinding = undefined
+            @vent.trigger( 'changepage', 'sectionEdit' )
         )
         @page.show( layout )
         layout.createEditor()
+        @vent.trigger( 'changepage', 'sectionNew' )
 
       sectionEdit: (name) ->
         @sectionFetch.then( =>
@@ -49,6 +52,7 @@ define(
           layout = new SectionEditor( model: section )
           @page.show( layout )
           layout.createEditor()
+          @vent.trigger( 'changepage', 'sectionEdit' )
         )
 
       sectionHistory: (name) ->
@@ -73,6 +77,7 @@ define(
               Backbone.history.navigate( '', trigger: true )
           )
           @page.show( layout )
+          @vent.trigger( 'changepage', 'sectionHistory' )
         )
 
 
