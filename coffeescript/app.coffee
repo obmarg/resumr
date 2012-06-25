@@ -1,6 +1,6 @@
 define(
-  [ 'router', 'controller', 'requests' ],
-  ( Router, Controller, InitRequests ) ->
+  [ 'router', 'controller' ],
+  ( Router, Controller ) ->
     app = new Backbone.Marionette.Application()
 
     app.addInitializer( (options) ->
@@ -9,7 +9,12 @@ define(
       Backbone.history.start()
     )
 
-    app.addInitializer( InitRequests )
+    app.addInitializer( ->
+      amplify.request.define( 'SelectHistoryItem', 'ajax',
+        url: '/api/sections/{name}/history/select/{id}'
+        type: 'POST'
+      )
+    )
 
     app.addRegions(
       page: '#page'
