@@ -18,6 +18,7 @@ static/js/views
 static/less/style.css
 
 data/
+build/
 
 # Ignore rope files
 .ropeproject/

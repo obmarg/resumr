@@ -2,7 +2,5 @@ pygit2
 flask
 jinja2
 markdown
-mox
-flask-testing
 blinker
 rauth>=0.4.12

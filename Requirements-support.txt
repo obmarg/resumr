@@ -1,0 +1,6 @@
+mox
+flask-testing
+nose
+fabric
+coverage
+pylint
