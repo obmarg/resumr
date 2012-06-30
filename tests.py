@@ -18,6 +18,7 @@ class ResumrTests(TestCase):
         resumr.app.config['SERVER_NAME'] = 'localhost:5000'
         resumr.app.config['SECRET_KEY'] = 'testsecret'
         resumr.app.config['TESTING'] = True
+        resumr.app.config['BYPASS_LOGIN'] = False
         resumr.app.testing = True
         return resumr.app
 
@@ -25,7 +26,6 @@ class ResumrTests(TestCase):
         self.mox = mox.Mox()
 
     def tearDown(self):
-        self.mox.VerifyAll()
         self.mox.UnsetStubs()
 
     def assertRedirects(self, response, location):
