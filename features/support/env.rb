@@ -8,7 +8,8 @@ require 'json'
 
 Before do
     Capybara.run_server = false
-    Capybara.current_driver = :poltergeist
+    #Capybara.current_driver = :poltergeist
+    Capybara.current_driver = :selenium
     Capybara.app_host = 'http://127.0.0.1:43001'
     Capybara.default_wait_time = 5
 end
