@@ -13,8 +13,9 @@ end
 
 Then /I should see the following sections/ do |table|
     # Wait to give the page time to load 
-    # (manual indicates this isn't needed, but seems it is...)
+    # (manual indicates this isn't needed, but seems it is for calls to all)
     sleep 0.5
+    # TODO: Would be good to rewrite this to use cucumber's table diff
     pageSections = page.all( 'div.section' )
     pageSections.length.should == table.hashes.length
     table.hashes.zip pageSections do |expected, actual|
@@ -41,4 +42,8 @@ end
 
 When /^I click the delete section button for (\w+)$/ do |sectionName|
     find( "div#section-#{sectionName} .icon-remove" ).click
+end
+
+Then /^I should be on the main page$/ do
+    current_path_info().should =~ /\/#?/
 end
