@@ -107,3 +107,22 @@ Feature: SectionList
           | no1       | textify       | 
           | no2       | boom          | 
           | no3       | shaketheroom  | 
+
+    Scenario: Delete section
+        Given the following sections:
+          | name      | content       | 
+          | no1       | textify       | 
+          | no2       | boom          | 
+        And I am on the main page
+        When I click the delete section button for no1
+        Then I should see the following sections:
+          | name      | content       | 
+          | no2       | boom          | 
+
+    Scenario: Delete last section
+        Given the following sections:
+          | name      | content       | 
+          | no2       | boom          | 
+        And I am on the main page
+        When I click the delete section button for no2
+        Then I should see no sections

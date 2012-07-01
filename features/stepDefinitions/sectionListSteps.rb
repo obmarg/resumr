@@ -22,6 +22,7 @@ When /I view the main page/ do
 end
 
 Then /I should see no sections/ do
+    sleep 0.5
     page.should have_no_selector( 'div.section' )
 end
 
@@ -55,4 +56,8 @@ end
 
 When /^I click the move section (\w+) button for (\w+)$/ do |direction, sectionName|
     find( "div#section-#{sectionName} .icon-chevron-#{direction}").click
+end
+
+When /^I click the delete section button for (\w+)$/ do |sectionName|
+    find( "div#section-#{sectionName} .icon-remove" ).click
 end
