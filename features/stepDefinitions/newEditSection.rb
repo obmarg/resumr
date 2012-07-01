@@ -1,13 +1,17 @@
+Given /^I am on the new section page$/ do
+    visit( '/#newSection' )
+end
+
+Given /^I am on the edit section page for (\w+)$/ do |sectionName|
+    visit( "/#section/#{sectionName}/edit" )
+end
+
 Then /^I should be on the new section page$/ do
     current_path_info().should == "/#newSection"
 end
 
 Then /^I should see an empty preview$/ do
     find( '#wmd-preview' ).should have_content( '' )
-end
-
-Given /^I am on the new section page$/ do
-    visit( '/#newSection' )
 end
 
 Then /^I should see "?(.*?)"? in the preview$/ do |text|
@@ -30,6 +34,10 @@ Then /^I should see a list containing:$/ do |table|
         end
     end
     found.should == true
+end
+
+Then /^I should be on the edit section page for (\w+)$/ do |sectionName|
+    current_path_info().should == "/#section/#{sectionName}/edit"
 end
 
 Then /^I should see the edit section "(.*?)" title$/ do |sectionName|

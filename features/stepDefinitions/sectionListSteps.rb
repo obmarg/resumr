@@ -1,18 +1,3 @@
-Given /^I have no sections$/ do
-    # Nothing to do here
-end
-
-Given /^the following sections:$/ do |table|
-    table.hashes.each do |row|
-        req = Net::HTTP::Post.new( 
-                           '/api/sections', 
-                           initheader = {'Content-Type'=>'application/json'}
-                          )
-        req.body = row.to_json
-        Net::HTTP.new( '127.0.0.1', 43001 ).start { |http| http.request(req) }
-    end
-end
-
 Given /^I am on the main page$/ do
     visit( '/' )
 end
@@ -40,10 +25,6 @@ end
 
 When /^I click the edit section button for (\w+)$/ do |sectionName|
     find( "div#section-#{sectionName} .icon-edit" ).click
-end
-
-Then /^I should be on the edit section page for (\w+)$/ do |sectionName|
-    current_path_info().should == "/#section/#{sectionName}/edit"
 end
 
 When /^I click the view section history button for (\w+)$/ do |sectionName|
