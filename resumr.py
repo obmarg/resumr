@@ -314,10 +314,10 @@ def SystemTestLogout():
     return "OK"
 
 if __name__ == "__main__":
-    port = None
+    args = {}
     if len( sys.argv ) > 1:
         if sys.argv[1] == 'systemtest':
             print "Running in system test mode"
-            port = SYSTEMTEST_PORT
+            args['port'] = SYSTEMTEST_PORT
             app.SystemTestMode()
-    app.run(port=port)
+    app.run(**args)

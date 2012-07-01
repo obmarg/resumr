@@ -19,9 +19,8 @@ define(
           @bindTo( @model, 'change', @render, @ )
 
       serializeData: () ->
-        return content: @converter.makeHtml( 
-          @model.get( 'content' ) 
-        )
+        name: @model.get( 'name' )
+        content: @converter.makeHtml( @model.get( 'content' ) )
         
       onClickDelete: () ->
         @model.destroy()
