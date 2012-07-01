@@ -28,7 +28,7 @@ end
 Then /I should see the following sections/ do |table|
     # Wait to give the page time to load 
     # (manual indicates this isn't needed, but seems it is...)
-    sleep 2
+    sleep 0.5
     pageSections = page.all( 'div.section' )
     pageSections.length.should == table.hashes.length
     table.hashes.zip pageSections do |expected, actual|
@@ -51,4 +51,8 @@ end
 
 Then /^I should be on the view section history page for (\w+)$/ do |sectionName|
     current_path_info().should == "/#section/#{sectionName}/history"
+end
+
+When /^I click the move section (\w+) button for (\w+)$/ do |direction, sectionName|
+    find( "div#section-#{sectionName} .icon-chevron-#{direction}").click
 end
