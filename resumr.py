@@ -1,9 +1,13 @@
 import json
 import markdown
+import shutil
+import sys
 from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
 from db import Document, SectionNotFound, RepoNotFound
 from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
+
+SYSTEMTEST_PORT = 43001
 
 
 class DefaultConfig(object):
@@ -18,6 +22,7 @@ class DefaultConfig(object):
     BYPASS_LOGIN = False
     BYPASS_REPO_NAME = 'test'
     DATA_PATH = None
+    SYSTEM_TEST = False
 
 
 class ResumrApp(Flask):
@@ -33,6 +38,20 @@ class ResumrApp(Flask):
                     name, self.config,
                     oAuthUrl.format( name )
                     )
+
+    def SystemTestMode(self):
+        # Called to activate system test mode for use w/ cucumber
+        self.config[ 'SERVER_NAME' ] = '127.0.0.1:{0}'.format(
+                SYSTEMTEST_PORT
+                )
+        self.config[ 'DEBUG' ] = True
+        self.config[ 'SYSTEM_TEST' ] = True
+        self.config[ 'DATA_PATH' ] = 'systemtestdata'
+        self.SystemTestReset()
+
+    def SystemTestReset(self):
+        shutil.rmtree( app.config[ 'DATA_PATH' ], ignore_errors=True )
+        self.config[ 'BYPASS_LOGIN' ] = True
 
 
 app = ResumrApp()
@@ -118,7 +137,11 @@ def AddSection():
     d = GetDoc()
     data = request.json
     # TODO: Add some validation of the input (either here or in Document)
-    s = d.AddSection( data[ 'newName' ], data[ 'content' ] )
+    try:
+        name = data[ 'newName' ]
+    except KeyError:
+        name = data[ 'name' ]
+    s = d.AddSection( name, data[ 'content' ] )
     return json.dumps( {
         'name' : s.name,
         'content' : data[ 'content' ],
@@ -268,5 +291,33 @@ def OAuthCallback(serviceName):
         abort( 500 )
     # TODO: Handle the various other error types here
 
+
+@app.route( '/systemtest/reset' )
+def SystemTestReset():
+    '''
+    Called by system tests to reset all data
+    '''
+    if not app.config[ 'SYSTEM_TEST' ]:
+        abort( 403 )
+    app.SystemTestReset()
+    return "OK"
+
+
+@app.route( '/systemtest/logout' )
+def SystemTestLogout():
+    '''
+    Called by system tests to logout
+    '''
+    if not app.config[ 'SYSTEM_TEST' ]:
+        abort( 403 )
+    app.config[ 'BYPASS_LOGIN' ] = False
+    return "OK"
+
 if __name__ == "__main__":
-    app.run()
+    port = None
+    if len( sys.argv ) > 1:
+        if sys.argv[1] == 'systemtest':
+            print "Running in system test mode"
+            port = SYSTEMTEST_PORT
+            app.SystemTestMode()
+    app.run(port=port)
