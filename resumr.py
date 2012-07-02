@@ -160,8 +160,10 @@ def UpdateSection(name):
     d = GetDoc()
     try:
         section = d.FindSection( name )
-        section.SetContent( request.json[ 'content' ] )
-        section.SetPosition( request.json[ 'pos' ] )
+        if section.CurrentContent() != request.json[ 'content' ]:
+            section.SetContent( request.json[ 'content' ] )
+        if section.GetPosition() != request.json[ 'pos' ]:
+            section.SetPosition( request.json[ 'pos' ] )
     except SectionNotFound:
         abort(404)
     return "OK"

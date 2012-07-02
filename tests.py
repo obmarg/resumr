@@ -246,7 +246,9 @@ class ResumrTests(TestCase):
 
         s = self.mox.CreateMock( Section )
         doc.FindSection( 'alfred' ).AndReturn( s )
+        s.CurrentContent().AndReturn( 'notthesame' )
         s.SetContent( 'woot' )
+        s.GetPosition().AndReturn( 100 )
         s.SetPosition( 500 )
 
         self.mox.ReplayAll()
@@ -280,6 +282,56 @@ class ResumrTests(TestCase):
                 )
         self.mox.VerifyAll()
         self.assert404( rv )
+
+    def testUpdateSectionPosition(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        inputStruct = { 'pos': 500, 'content': 'woot' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'alfred' ).AndReturn( s )
+        s.CurrentContent().AndReturn( 'woot' )
+        s.GetPosition().AndReturn( 100 )
+        s.SetPosition( 500 )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/sections/alfred',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assert200( rv )
+
+    def testUpdateSectionContent(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        inputStruct = { 'pos': 500, 'content': 'woot' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'alfred' ).AndReturn( s )
+        s.CurrentContent().AndReturn( 'notthesame' )
+        s.SetContent( 'woot' )
+        s.GetPosition().AndReturn( 500 )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/sections/alfred',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assert200( rv )
 
     def testRemoveSection(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
