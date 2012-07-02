@@ -44,6 +44,9 @@ define(
         if @model.isNew()
           data.newName = $( '#sectionName' ).val()
           isNew = true
+        else if data.content == @model.get( 'content' )
+          # Don't bother saving if nothing has actually changed
+          return
         @model.save( data,
           success: =>
             @trigger( 'saved', @model )
