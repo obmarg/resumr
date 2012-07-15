@@ -4,30 +4,6 @@ from .. import gitutils
 from .defs import BaseTest, TestObjectType, TestBlobType, TestCommitType
 
 
-class ContentTestsMeta(type):
-    '''
-    Meta class for ContentTests
-
-    Renames the _testBlah methods in ContentTests to testBlah in any
-    subclasses of ContentTests.  This means that classes inheriting
-    from ContentTests will run the tests contained in ContentTests,
-    but ContentTests itself will not be considered an actual unit test
-    '''
-
-    def __new__(meta, className, bases, classDict):
-        if className != 'ContentTests':
-            # Find the ContentTests base
-            for cls in bases:
-                if cls.__name__ != 'ContentTests':
-                    continue
-                # Then add the _test methods to our class dict
-                # without the _ prefix
-                for attrName, attr in cls.__dict__.items():
-                    if attrName.startswith( '_test' ):
-                        classDict[attrName[1:]] = attr
-        return type.__new__(meta, className, bases, classDict)
-
-
 class ContentTests(BaseTest):
     '''
     This class provides tests for the base Content class functionality.
@@ -45,13 +21,11 @@ class ContentTests(BaseTest):
     '''
     TestClassType = None
 
-    __metaclass__ = ContentTestsMeta
-
     def setUp(self):
         super( ContentTests, self ).setUp()
         self.mox.StubOutWithMock(gitutils, 'CommitBlob')
 
-    def _testCurrentContent( self ):
+    def testCurrentContent( self ):
         '''
         Tests the CurrentContent function
         '''
@@ -76,7 +50,7 @@ class ContentTests(BaseTest):
         self.mox.VerifyAll()
         self.assertEqual( 'blobData', c )
 
-    def _testSetContent( self ):
+    def testSetContent( self ):
         '''
         Tests the SetContent function
         '''
@@ -98,7 +72,7 @@ class ContentTests(BaseTest):
         self.mox.VerifyAll()
         self.assertEqual( s.headCommit, 'newCommit' )
 
-    def _testContentHistory(self):
+    def testContentHistory(self):
         '''
         Tests the ContentHistory function
         '''

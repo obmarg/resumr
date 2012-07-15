@@ -1,5 +1,5 @@
 
-from contenttests import ContentTests
+from content import ContentTests
 from .. import section
 from .defs import BaseTest
 
@@ -21,7 +21,7 @@ class SectionTests(ContentTests):
 
     def testGetPosition( self ):
         '''
-        Tests the GetPosition function
+        Testing the GetPosition function of a Section
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
@@ -37,7 +37,7 @@ class SectionTests(ContentTests):
 
     def testSetPosition( self ):
         '''
-        Tests the SetPosition function
+        Testing the SetPosition function of a Section
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
