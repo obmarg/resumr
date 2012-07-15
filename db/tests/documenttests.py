@@ -3,7 +3,7 @@ import os
 import pygit2
 from .. import doc
 from .. import sectionindex
-from ..constants import SECTION_INDEX_FILENAME
+from ..constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
 from .defs import BaseTest, TestObjectType
 
 
@@ -15,6 +15,7 @@ class DocumentTests(BaseTest):
     def setUp( self ):
         super( DocumentTests, self ).setUp()
         self.mox.StubOutClassWithMocks(doc, 'Section')
+        self.mox.StubOutClassWithMocks(doc, 'Stylesheet')
         self.mox.StubOutClassWithMocks(doc, 'Repository')
         self.mox.StubOutWithMock(doc, 'init_repository')
         self.mox.StubOutWithMock(doc, 'CommitBlob')
@@ -271,5 +272,26 @@ class DocumentTests(BaseTest):
 
         self.mox.VerifyAll()
 
+    def testGetStylesheet(self):
+        '''
+        Testing getting the stylesheet for the document
+        '''
+        mockRepo = self._createMockRepo()
 
+        mockRef = TestObjectType( 'oid' )
 
+        mockRepo.lookup_reference(
+                STYLESHEET_REF_PREFIX + 'stylesheet'
+                ).AndReturn( mockRef )
+
+        mockRepo[ 'oid' ].AndReturn( 'commit' )
+
+        mockStylesheet = doc.Stylesheet( 'stylesheet', 'commit', mockRepo )
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+        s = d.GetStylesheet()
+
+        self.mox.VerifyAll()
+        self.assertEqual( mockStylesheet, s )

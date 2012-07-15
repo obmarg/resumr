@@ -3,6 +3,7 @@ import os
 from pygit2 import Repository, init_repository
 from gitutils import CommitBlob
 from .section import Section
+from .stylesheet import Stylesheet
 from .sectionindex import SectionIndex
 from .constants import MASTER_REF, SECTION_REF_PREFIX
 from .constants import SECTION_INDEX_FILENAME
