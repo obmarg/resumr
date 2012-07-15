@@ -12,14 +12,22 @@ class ContentTests(BaseTest):
     really works when it is created as a subclass.
 
     To use this class, you should inherit from it in the class that
-    tests your object, providing the name of the actual class to
-    test in the TestClassType class variable.  For example:
+    tests your object, providing some test parameters as class variables.
+    For example:
 
         class SectionTests(ContentTests):
-            TestClassType = Section
+            TestClass = Section
+            CommitRefPrefix = 'refs/heads/sections'
 
+    Class Variables:
+        TestClass       The Content subclass we're testing
+        CommitRefPrefix The prefix this class uses on refs when creating
+                        a commit
+        NameToUse       The name to pass to TestClass constructor (optional)
     '''
-    TestClassType = None
+    TestClass = None
+    CommitRefPrefix = None
+    NameToUse = 'name'
 
     def setUp(self):
         super( ContentTests, self ).setUp()
@@ -44,7 +52,7 @@ class ContentTests(BaseTest):
 
         self.mox.ReplayAll()
 
-        s = self.TestClassType( 'name', mockHead, mockRepo )
+        s = self.TestClass( self.NameToUse, mockHead, mockRepo )
         c = s.CurrentContent()
 
         self.mox.VerifyAll()
@@ -58,15 +66,15 @@ class ContentTests(BaseTest):
         mockRepo = self.mox.CreateMock( pygit2.Repository )
 
         gitutils.CommitBlob(
-                mockRepo, 'content', 'name', 'Updating section',
-                [ mockHead ], 'refs/heads/sections/name'
+                mockRepo, 'content', self.NameToUse, 'Updating content',
+                [ mockHead ], self.CommitRefPrefix + self.NameToUse
                 ).AndReturn( 'newId' )
 
         mockRepo[ 'newId' ].AndReturn( 'newCommit' )
 
         self.mox.ReplayAll()
 
-        s = self.TestClassType( 'name', mockHead, mockRepo )
+        s = self.TestClass( self.NameToUse, mockHead, mockRepo )
         s.SetContent( 'content' )
 
         self.mox.VerifyAll()
@@ -96,6 +104,6 @@ class ContentTests(BaseTest):
 
         self.mox.ReplayAll()
 
-        s = self.TestClassType('name', head, mockRepo)
+        s = self.TestClass(self.NameToUse, head, mockRepo)
         history = s.ContentHistory()
         self.assertEqual( expected, list(history))

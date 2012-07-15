@@ -17,7 +17,7 @@ class Content(object):
 
         Args:
             name        The name of the content
-            headCommit  The head commit of the section
+            headCommit  The head commit of the content
             repo        The repository object
         '''
         self.name = name
@@ -26,7 +26,7 @@ class Content(object):
 
     def CurrentContent( self ):
         '''
-        Returns the current content of the section
+        Returns the current content
         '''
         oid = self.headCommit.tree[ 0 ].oid
         blob = self.repo[ oid ]
@@ -34,7 +34,7 @@ class Content(object):
 
     def ContentHistory( self ):
         '''
-        Generator function that returns the history of this section
+        Generator function that returns the history of the content
 
         This niavely assumes there's only one parent commit
         on each commit, which will do for now.
@@ -51,16 +51,16 @@ class Content(object):
 
     def SetContent( self, newContent ):
         '''
-        Adds a new version of the section
+        Adds a new version of the content
 
         Args:
-            newContent  The new content of the section
+            newContent  The new content of the content
         '''
         newId = gitutils.CommitBlob(
                 self.repo,
                 newContent,
                 self.name,
-                'Updating section',
+                'Updating content',
                 [ self.headCommit ],
                 self.ContentRefPrefix + self.name
                 )

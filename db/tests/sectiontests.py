@@ -1,19 +1,16 @@
 
 from content import ContentTests
 from .. import section
-from .defs import BaseTest
+from ..constants import SECTION_REF_PREFIX
 
 
 class SectionTests(ContentTests):
     '''
     Tests the section class
-
-    Currently this only tests the
-    CurrentContent & SetContent functions
-
-    TODO: Write the rest of the tests
     '''
-    TestClassType = section.Section
+
+    TestClass = section.Section
+    CommitRefPrefix = SECTION_REF_PREFIX
 
     def setUp( self ):
         super( SectionTests, self ).setUp()

@@ -620,7 +620,7 @@ class ResumrTests(TestCase):
         contentHistory = [ 'one', 'two', 'three' ]
         style.ContentHistory().AndReturn( contentHistory )
 
-        expected = json.dumps( { 'content': c } for c in contentHistory )
+        expected = json.dumps([{ 'content': c } for c in contentHistory])
 
         self.mox.ReplayAll()
         rv = self.client.get( '/stylesheet/history' )
@@ -636,7 +636,7 @@ class ResumrTests(TestCase):
         style = self.mox.CreateMock( Stylesheet )
         doc.GetStylesheet().AndReturn( style )
 
-        style.SetContent( 'xyzz' ).AndReturn()
+        style.SetContent( 'xyzz' )
 
         inputStruct = { 'content': 'xyzz' }
         inputStr = json.dumps( inputStruct )
