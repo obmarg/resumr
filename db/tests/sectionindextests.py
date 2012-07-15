@@ -19,7 +19,7 @@ class SectionIndexTests(BaseTest):
         # Set up our fake commit
         testCommit = TestCommitType(
                 { SECTION_INDEX_FILENAME : TestObjectType( 'indexOid' ) },
-                'unused'
+                'unused', []
                 )
         testBlob = TestBlobType( 'someData' )
 
