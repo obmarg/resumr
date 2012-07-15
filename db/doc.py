@@ -176,3 +176,12 @@ class Document(object):
         index = SectionIndex( self.repo )
         index.RemoveSection( name )
         index.Save( self.repo )
+
+    def GetStylesheet(self):
+        '''
+        Gets the stylesheet object for this document
+
+        Returns:
+            A stylesheet object
+        '''
+        pass

@@ -4,7 +4,7 @@ import json
 import unittest
 import mox
 from StringIO import StringIO
-from db import Section, Document, SectionNotFound, RepoNotFound
+from db import Section, Document, SectionNotFound, RepoNotFound, Stylesheet
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
@@ -590,6 +590,67 @@ class ResumrTests(TestCase):
             rv = self.client.get(url)
             self.assertStatus(rv, 403)
 
+    def testGetCurrentStylesheet(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        cssContent = 'h1 { text-align: test; }'
+        style.CurrentContent().AndReturn( cssContent )
+
+        expected = json.dumps({ 'content': cssContent })
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/stylesheet' )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+        self.assertEqual( expected, rv.json )
+
+    def testGetStylesheetHistory(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        contentHistory = [ 'one', 'two', 'three' ]
+        style.ContentHistory().AndReturn( contentHistory )
+
+        expected = json.dumps( { 'content': c } for c in contentHistory )
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/stylesheet/history' )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+        self.assertEqual( expected, rv.json )
+
+    def testSetStylesheetContent(self):
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        style.SetContent( 'xyzz' ).AndReturn()
+
+        inputStruct = { 'content': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
 
 if __name__ == "__main__":
     unittest.main()
