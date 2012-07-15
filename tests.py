@@ -591,6 +591,9 @@ class ResumrTests(TestCase):
             self.assertStatus(rv, 403)
 
     def testGetCurrentStylesheet(self):
+        '''
+        Testing the get current stylesheet API
+        '''
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
@@ -610,6 +613,9 @@ class ResumrTests(TestCase):
         self.assertEqual( expected, rv.json )
 
     def testGetStylesheetHistory(self):
+        '''
+        Testing the get stylesheet history API
+        '''
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
@@ -629,6 +635,9 @@ class ResumrTests(TestCase):
         self.assertEqual( expected, rv.json )
 
     def testSetStylesheetContent(self):
+        '''
+        Testing the set stylesheet content API
+        '''
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
@@ -651,6 +660,47 @@ class ResumrTests(TestCase):
                 )
         self.mox.VerifyAll()
         self.assertStatus(rv, 200)
+
+    def testSetStylesheetMissingContent(self):
+        '''
+        Testing the set stylesheet content API w/out content
+        '''
+        inputStruct = { 'somethingElse': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 500)
+
+    def testSetStylesheetInvalidContent(self):
+        '''
+        Testing the set stylesheet content API w/ invalid content
+        '''
+        inputStruct = {
+                'content': '''
+                </script><script type="text/javascript">
+                alert("FUUUCK");</script>
+                ''' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 500)
+
 
 if __name__ == "__main__":
     unittest.main()
