@@ -604,10 +604,10 @@ class ResumrTests(TestCase):
         cssContent = 'h1 { text-align: test; }'
         style.CurrentContent().AndReturn( cssContent )
 
-        expected = json.dumps({ 'content': cssContent })
+        expected = { 'content': cssContent }
 
         self.mox.ReplayAll()
-        rv = self.client.get( '/stylesheet' )
+        rv = self.client.get( '/api/stylesheet' )
         self.mox.VerifyAll()
         self.assertStatus(rv, 200)
         self.assertEqual( expected, rv.json )
@@ -626,10 +626,10 @@ class ResumrTests(TestCase):
         contentHistory = [ 'one', 'two', 'three' ]
         style.ContentHistory().AndReturn( contentHistory )
 
-        expected = json.dumps([{ 'content': c } for c in contentHistory])
+        expected = [{ 'content': c } for c in contentHistory]
 
         self.mox.ReplayAll()
-        rv = self.client.get( '/stylesheet/history' )
+        rv = self.client.get( '/api/stylesheet/history' )
         self.mox.VerifyAll()
         self.assertStatus(rv, 200)
         self.assertEqual( expected, rv.json )
@@ -645,6 +645,7 @@ class ResumrTests(TestCase):
         style = self.mox.CreateMock( Stylesheet )
         doc.GetStylesheet().AndReturn( style )
 
+        style.CurrentContent().AndReturn( '' )
         style.SetContent( 'xyzz' )
 
         inputStruct = { 'content': 'xyzz' }
@@ -653,7 +654,34 @@ class ResumrTests(TestCase):
 
         self.mox.ReplayAll()
         rv = self.client.put(
-                '/stylesheet',
+                '/api/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+
+    def testSetStylesheetContentNoChange(self):
+        '''
+        Testing the set stylesheet content API ignores duplicate data
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        style.CurrentContent().AndReturn( 'xyzz' )
+
+        inputStruct = { 'content': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/stylesheet',
                 input_stream=inputStream,
                 content_type='application/json',
                 content_length=len(inputStr)
@@ -665,13 +693,20 @@ class ResumrTests(TestCase):
         '''
         Testing the set stylesheet content API w/out content
         '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
         inputStruct = { 'somethingElse': 'xyzz' }
         inputStr = json.dumps( inputStruct )
         inputStream = StringIO( inputStr )
 
         self.mox.ReplayAll()
         rv = self.client.put(
-                '/stylesheet',
+                '/api/stylesheet',
                 input_stream=inputStream,
                 content_type='application/json',
                 content_length=len(inputStr)
@@ -683,6 +718,13 @@ class ResumrTests(TestCase):
         '''
         Testing the set stylesheet content API w/ invalid content
         '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
         inputStruct = {
                 'content': '''
                 </script><script type="text/javascript">
@@ -693,7 +735,7 @@ class ResumrTests(TestCase):
 
         self.mox.ReplayAll()
         rv = self.client.put(
-                '/stylesheet',
+                '/api/stylesheet',
                 input_stream=inputStream,
                 content_type='application/json',
                 content_length=len(inputStr)

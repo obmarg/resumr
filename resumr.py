@@ -99,6 +99,13 @@ def index():
     return redirect( url_for( 'Login' ) )
 
 
+##############
+#
+# Sections API
+#
+##############
+
+
 @app.route('/api/sections', methods=['GET'])
 def ListSections():
     ''' Lists the current sections including order '''
@@ -235,6 +242,56 @@ def SelectSectionHistory( name, historyId ):
     abort( 404 )
 
 
+#############
+#
+# Stylesheet API
+#
+#############
+
+@app.route( '/api/stylesheet', methods=['GET'] )
+def GetStylesheet():
+    '''
+    Gets the current stylesheet contents
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    return json.dumps({'content': stylesheet.CurrentContent()})
+
+
+@app.route('/api/stylesheet/history', methods=['GET'])
+def GetStylesheetHistory():
+    '''
+    Gets the history of the stylesheet
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    data = [{'content': c} for c in stylesheet.ContentHistory()]
+    return json.dumps(data)
+
+
+@app.route('/api/stylesheet', methods=['PUT'])
+def SetStylesheetContent():
+    '''
+    Sets the current content of the stylesheet
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    try:
+        content = request.json['content']
+        # TODO: need to validate the content is actually css/less
+    except KeyError:
+        abort( 500 )
+    if stylesheet.CurrentContent() != content:
+        stylesheet.SetContent( content )
+    return "OK"
+
+#############
+#
+# Misc routes
+#
+#############
+
+
 @app.route('/render')
 def Render():
     if not IsLoggedIn():
@@ -246,6 +303,13 @@ def Render():
             'render.html',
             sections=sections
             )
+
+
+##########
+#
+# Authentication Routes
+#
+##########
 
 
 @app.route('/login')
@@ -292,6 +356,13 @@ def OAuthCallback(serviceName):
     except KeyError:
         abort( 500 )
     # TODO: Handle the various other error types here
+
+
+#############
+#
+# System Test Utils
+#
+#############
 
 
 @app.route( '/systemtest/reset' )
