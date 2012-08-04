@@ -6,7 +6,7 @@ from .section import Section
 from .stylesheet import Stylesheet
 from .sectionindex import SectionIndex
 from .constants import MASTER_REF, SECTION_REF_PREFIX
-from .constants import SECTION_INDEX_FILENAME
+from .constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
 from .errors import SectionNotFound, RepoNotFound
 
 DEFAULT_ROOT_PATH = 'data'
@@ -185,4 +185,10 @@ class Document(object):
         Returns:
             A stylesheet object
         '''
-        pass
+        try:
+            ref = self.repo.lookup_reference(
+                    STYLESHEET_REF_PREFIX
+                    )
+        except KeyError:
+            raise SectionNotFound()
+        return Stylesheet( 'stylesheet', self.repo[ref.oid], self.repo )

@@ -4,6 +4,7 @@ import pygit2
 from .. import doc
 from .. import sectionindex
 from ..constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
+from ..errors import SectionNotFound
 from .defs import BaseTest, TestObjectType
 
 
@@ -274,14 +275,14 @@ class DocumentTests(BaseTest):
 
     def testGetStylesheet(self):
         '''
-        Testing getting the stylesheet for the document
+        Testing Document.GetStylesheet
         '''
         mockRepo = self._createMockRepo()
 
         mockRef = TestObjectType( 'oid' )
 
         mockRepo.lookup_reference(
-                STYLESHEET_REF_PREFIX + 'stylesheet'
+                STYLESHEET_REF_PREFIX
                 ).AndReturn( mockRef )
 
         mockRepo[ 'oid' ].AndReturn( 'commit' )
@@ -295,3 +296,18 @@ class DocumentTests(BaseTest):
 
         self.mox.VerifyAll()
         self.assertEqual( mockStylesheet, s )
+
+    def testGetStylesheetMissingRef(self):
+        '''
+        Testing Document.GetStylesheet error handling
+        '''
+        mockRepo = self._createMockRepo()
+
+        mockRepo.lookup_reference(
+                STYLESHEET_REF_PREFIX
+                ).AndRaise(KeyError)
+
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+        self.assertRaises(SectionNotFound, lambda: d.GetStylesheet())
