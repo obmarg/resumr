@@ -24,6 +24,9 @@
     // I've tried to localize the things you are likely to change to 
     // this area.
     // -------------------------------------------------------------------
+    
+    // GC Change: An internal ref to Markdown, to allow the actual variable to be unbound
+    var InternalMarkdown = Markdown;
 
     // The text that appears on the upper part of the dialog box when
     // entering links.
@@ -53,7 +56,7 @@
 
         idPostfix = idPostfix || "";
 
-        var hooks = this.hooks = new Markdown.HookCollection();
+        var hooks = this.hooks = new InternalMarkdown.HookCollection();
         hooks.addNoop("onPreviewRefresh");       // called with no arguments after the preview has been refreshed
         hooks.addNoop("postBlockquoteCreation"); // called with the user's selection *after* the blockquote was created; should return the actual to-be-inserted text
         hooks.addFalse("insertImageDialog");     /* called with one parameter: a callback to be called with the URL of the image. If the application creates
