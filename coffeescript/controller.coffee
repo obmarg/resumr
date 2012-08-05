@@ -1,6 +1,14 @@
 define(
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
+  [ 'layouts/sectionOverview', 'models/section', 'models/stylesheet',
+    'collections/sectionList', 'views/sectionListView', 'views/sectionItemView',
+    'views/sectionEditor', 'collections/sectionHistory',
+    'views/sectionHistoryView', 'views/stylesheetEditor'
+  ],
+  ( SectionOverviewLayout, Section, Stylesheet,
+    SectionList, SectionListView, SectionItemView,
+    SectionEditor, SectionHistory,
+    SectionHistoryView, StylesheetEditorView
+  ) ->
     class Controller
       constructor: (@page, @vent) ->
         # Load Temporary test data
@@ -10,12 +18,10 @@ define(
         section1 = new Section( content: content1 )
         section2 = new Section( content: content2 )
 
-        @sectionFetch = $.Deferred()
         @sectionList = new SectionList()
-        @sectionList.fetch(
-          success: => @sectionFetch.resolve()
-          failure: => @sectionFetch.reject()
-        )
+        @sectionFetch = @sectionList.fetch()
+        @stylesheet = new Stylesheet()
+        @stylesheetFetch = @stylesheet.fetch()
 
       sectionOverview: ->
         layout = new SectionOverviewLayout()
@@ -80,6 +86,13 @@ define(
           @vent.trigger( 'changepage', 'sectionHistory' )
         )
 
+      stylesheetEdit: ->
+        # Opens the stylesheet editor
+        @stylesheetFetch.then( =>
+          layout = new StylesheetEditorView()
+          @page.show( layout )
+          @vent.trigger( 'changepage', 'stylesheetEdit' )
+        )
 
     return Controller
 )

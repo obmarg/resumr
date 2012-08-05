@@ -5,3 +5,4 @@ define [  ], ( ) ->
       'newSection' : 'sectionNew'
       'section/:name/edit' : 'sectionEdit'
       'section/:name/history' : 'sectionHistory'
+      'stylesheet' : 'stylesheetEdit'
