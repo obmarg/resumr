@@ -169,10 +169,4 @@ class Document(object):
         Returns:
             A stylesheet object
         '''
-        try:
-            ref = self.repo.lookup_reference(
-                    STYLESHEET_REF_PREFIX
-                    )
-        except KeyError:
-            raise ContentNotFound()
-        return Stylesheet( 'stylesheet', self.repo[ref.oid], self.repo )
+        return Stylesheet( 'stylesheet', self.repo )

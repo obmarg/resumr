@@ -3,8 +3,8 @@ import os
 import pygit2
 from .. import doc
 from .. import sectionindex
-from ..constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
-from .defs import BaseTest, TestObjectType
+from ..constants import SECTION_INDEX_FILENAME
+from .defs import BaseTest
 
 
 class DocumentTests(BaseTest):
@@ -223,15 +223,7 @@ class DocumentTests(BaseTest):
         '''
         mockRepo = self._createMockRepo()
 
-        mockRef = TestObjectType( 'oid' )
-
-        mockRepo.lookup_reference(
-                STYLESHEET_REF_PREFIX
-                ).AndReturn( mockRef )
-
-        mockRepo[ 'oid' ].AndReturn( 'commit' )
-
-        mockStylesheet = doc.Stylesheet( 'stylesheet', 'commit', mockRepo )
+        mockStylesheet = doc.Stylesheet( 'stylesheet', mockRepo )
 
         self.mox.ReplayAll()
 

@@ -7,6 +7,7 @@ class Stylesheet(Content):
     Class that manages the stylesheet for a document
     '''
     ContentRefPrefix = STYLESHEET_REF_PREFIX
+    AutoCreate = True
 
     def __init__(self, name, *pargs, **kwargs):
         '''

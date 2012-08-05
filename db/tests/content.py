@@ -91,7 +91,7 @@ class ContentTests(BaseTest):
         self.assertEqual( 'reference', actual )
         self.mox.VerifyAll()
 
-    def testAutoCreate(self):
+    def testAutoCreate(self, passParam=True):
         '''
         Testing content is automatically created if it doesn't exist
         '''
@@ -112,10 +112,20 @@ class ContentTests(BaseTest):
 
         # Now, try it out
         self.mox.ReplayAll()
-        s = self.TestClass( self.NameToUse, mockRepo, create=True )
+        params = {'create': True} if passParam else {}
+        s = self.TestClass( self.NameToUse, mockRepo, **params )
         content = s.CurrentContent()
         self.mox.VerifyAll()
         self.assertEqual( 'data', content )
+
+    def testAutoCreateNoParam(self):
+        '''
+        Testing that Content is always auto created
+        '''
+        if not self.TestClass.AutoCreate:
+            # No need to test non-AutoCreate classes
+            return
+        self.testAutoCreate( passParam=False )
 
     def testMissingContent(self):
         '''
