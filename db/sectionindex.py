@@ -2,7 +2,7 @@
 import re
 from collections import namedtuple
 from .constants import MASTER_REF, SECTION_INDEX_FILENAME
-from .errors import MasterNotFound, BrokenMaster, SectionNotFound
+from .errors import MasterNotFound, BrokenMaster, ContentNotFound
 from .gitutils import CommitBlob
 
 SectionIndexEntry = namedtuple('SectionIndexEntry', ['name'])
@@ -99,7 +99,7 @@ class SectionIndex(object):
         Returns:
             The position of the section
         Throws:
-            SectionNotFound error if section not found in index
+            ContentNotFound error if section not found in index
         '''
         matchingSections = [
                 s[0] for s in enumerate( self.sections )
@@ -108,7 +108,7 @@ class SectionIndex(object):
         if matchingSections:
             return matchingSections[ 0 ]
         else:
-            raise SectionNotFound()
+            raise ContentNotFound()
 
     def SetSectionPosition( self, sectionName, newPosition ):
         '''
@@ -118,7 +118,7 @@ class SectionIndex(object):
             sectionName     The name of the section to set
             newPosition     The new position to set
         Throws:
-            SectionNotFound If section is not found in index
+            ContentNotFound If section is not found in index
             ValueError      If newPosition is invalid
         '''
         if newPosition < 0:

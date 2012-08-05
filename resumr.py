@@ -4,7 +4,7 @@ import shutil
 import sys
 from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
-from db import Document, SectionNotFound, RepoNotFound
+from db import Document, ContentNotFound, RepoNotFound
 from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
 SYSTEMTEST_PORT = 43001
@@ -127,7 +127,7 @@ def GetSection(name):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     return json.dumps({
         'name': s.name,
@@ -171,7 +171,7 @@ def UpdateSection(name):
             section.SetContent( request.json[ 'content' ] )
         if section.GetPosition() != request.json[ 'pos' ]:
             section.SetPosition( request.json[ 'pos' ] )
-    except SectionNotFound:
+    except ContentNotFound:
         abort(404)
     return "OK"
 
@@ -207,7 +207,7 @@ def SectionHistory(name):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     data = []
     for i, d in enumerate( s.ContentHistory() ):
@@ -232,7 +232,7 @@ def SelectSectionHistory( name, historyId ):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     for i, d in enumerate( s.ContentHistory() ):
         if i == historyId:
@@ -279,6 +279,8 @@ def SetStylesheetContent():
     try:
         content = request.json['content']
         # TODO: need to validate the content is actually css/less
+        # TODO: some simple size validation would be good too,
+        #       don't want some sort of DOS style attack w/ massive files
     except KeyError:
         abort( 500 )
     if stylesheet.CurrentContent() != content:

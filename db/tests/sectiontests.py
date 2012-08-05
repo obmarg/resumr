@@ -1,12 +1,13 @@
 
 from content import ContentTests
 from .. import section
+from .. import gitutils
 from ..constants import SECTION_REF_PREFIX
 
 
 class SectionTests(ContentTests):
     '''
-    Tests the section class
+    Section Class Tests
     '''
 
     TestClass = section.Section
@@ -14,11 +15,10 @@ class SectionTests(ContentTests):
 
     def setUp( self ):
         super( SectionTests, self ).setUp()
-        self.mox.StubOutWithMock(section, 'CommitBlob')
 
     def testGetPosition( self ):
         '''
-        Testing the GetPosition function of a Section
+        Testing db.Section.GetPosition
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
@@ -26,7 +26,7 @@ class SectionTests(ContentTests):
         mockIndex.GetSectionPosition( 'sectionName' ).AndReturn( 100 )
         self.mox.ReplayAll()
 
-        s = section.Section( 'sectionName', 'commit', 'repo' )
+        s = section.Section( 'sectionName', 'repo' )
 
         self.assertEqual( 100, s.GetPosition() )
 
@@ -34,7 +34,7 @@ class SectionTests(ContentTests):
 
     def testSetPosition( self ):
         '''
-        Testing the SetPosition function of a Section
+        Testing db.Section.SetPosition
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
@@ -43,7 +43,7 @@ class SectionTests(ContentTests):
         mockIndex.Save( 'repo' )
         self.mox.ReplayAll()
 
-        s = section.Section( 'sectionName', 'commit', 'repo' )
+        s = section.Section( 'sectionName', 'repo' )
 
         s.SetPosition( 100 )
 

@@ -4,7 +4,7 @@ import json
 import unittest
 import mox
 from StringIO import StringIO
-from db import Section, Document, SectionNotFound, RepoNotFound, Stylesheet
+from db import Section, Document, ContentNotFound, RepoNotFound, Stylesheet
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
@@ -200,7 +200,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'missing' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'missing' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.get( '/api/sections/missing' )
@@ -271,7 +271,7 @@ class ResumrTests(TestCase):
         inputStr = json.dumps( inputStruct )
         inputStream = StringIO( inputStr )
 
-        doc.FindSection( 'jenga' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'jenga' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.put(
@@ -373,7 +373,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'charlie' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'charlie' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.get( '/api/sections/charlie/history' )
@@ -407,7 +407,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'zordon' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'zordon' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.post( '/api/sections/zordon/history/select/35' )

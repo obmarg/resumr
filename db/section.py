@@ -1,4 +1,3 @@
-from gitutils import CommitBlob
 from .sectionindex import SectionIndex
 from .content import Content
 from .constants import SECTION_REF_PREFIX
@@ -17,7 +16,7 @@ class Section(Content):
         Returns:
             The position of this section
         Throws:
-            SectionNotFound error if section not found in index
+            ContentNotFound error if section not found in index
         '''
         index = SectionIndex(self.repo)
         return index.GetSectionPosition( self.name )
@@ -29,7 +28,7 @@ class Section(Content):
         Args:
             newPosition     The new position of the section
         Throws:
-            SectionNotFound error if the section isn't found in the index
+            ContentNotFound error if the section isn't found in the index
         '''
         index = SectionIndex( self.repo )
         index.SetSectionPosition( self.name, newPosition )

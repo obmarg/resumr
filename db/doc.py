@@ -7,7 +7,7 @@ from .stylesheet import Stylesheet
 from .sectionindex import SectionIndex
 from .constants import MASTER_REF, SECTION_REF_PREFIX
 from .constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
-from .errors import SectionNotFound, RepoNotFound
+from .errors import ContentNotFound, RepoNotFound
 
 DEFAULT_ROOT_PATH = 'data'
 
@@ -36,6 +36,7 @@ class Document(object):
             # Create a bare repository
             self.repo = init_repository( targetDir, True )
             self._CreateMasterBranch()
+            self._CreateStylesheet()
         else:
             try:
                 self.repo = Repository( targetDir )
@@ -51,6 +52,10 @@ class Document(object):
                 self.repo, '', SECTION_INDEX_FILENAME, 'Initial commit'
                 )
         self.repo.create_reference( MASTER_REF, commitId )
+
+    def _CreateStylesheet( self ):
+        # TODO: Create the stylesheet (probably via the stylesheet class)
+        pass
 
     @staticmethod
     def _IsSectionRef( refName ):
@@ -78,22 +83,17 @@ class Document(object):
         '''
         Gets an iterator over the section refs
         '''
-        return (
-                (
-                    self._RefNameToSectionName( ref ),
-                    self.repo.lookup_reference( ref ),
-                    )
+        return ( self._RefNameToSectionName( ref )
                 for ref in self.repo.listall_references()
-                if self._IsSectionRef( ref )
-                )
+                if self._IsSectionRef( ref ) )
 
     def Sections( self ):
         '''
         Gets an iterator over all the sections
         '''
         return (
-                Section( name, self.repo[ref.oid], self.repo )
-                for name, ref in self._SectionRefs()
+                Section( name, self.repo )
+                for name in self._SectionRefs()
                 )
 
     def CurrentSections( self ):
@@ -125,16 +125,8 @@ class Document(object):
             name    The name of the section to find
         Returns:
             The section if found
-        Exceptions:
-            SectionNotFound if section not found
         '''
-        try:
-            ref = self.repo.lookup_reference(
-                    SECTION_REF_PREFIX + name
-                    )
-        except KeyError:
-            raise SectionNotFound()
-        return Section( name, self.repo[ref.oid], self.repo )
+        return Section( name, self.repo )
 
     def AddSection( self, name, content='' ):
         '''
@@ -148,22 +140,14 @@ class Document(object):
         Returns:
             The new Section object
         '''
-        # TODO: Should probably make
-        #       sure no such section exists
-        commitId = CommitBlob(
-                self.repo,
-                content,
-                name,
-                'Created section ' + name
-                )
-        ref = self.repo.create_reference(
-                SECTION_REF_PREFIX + name,
-                commitId
-                )
+        # TODO: Should probably make sure no such section exists somewhere
+        #       I'm thinking that'd be the job of the section class?
+        section = Section(name, self.repo, create=True)
+        section.Create(content=content)
         index = SectionIndex(self.repo)
         index.AddSection( name )
         index.Save( self.repo )
-        return Section( name, self.repo[ ref.oid ], self.repo )
+        return section
 
     def RemoveSection( self, name ):
         '''
@@ -190,5 +174,5 @@ class Document(object):
                     STYLESHEET_REF_PREFIX
                     )
         except KeyError:
-            raise SectionNotFound()
+            raise ContentNotFound()
         return Stylesheet( 'stylesheet', self.repo[ref.oid], self.repo )
