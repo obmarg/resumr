@@ -18,14 +18,16 @@ define(
         if @model?
           @bindTo( @model, 'change', @render, @ )
 
-      serializeData: () ->
+      serializeData: ->
         name: @model.get( 'name' )
         content: @converter.makeHtml( @model.get( 'content' ) )
+        showTools: @options.showTools
+        divClass: if @options.showTools then 'section' else 'listItem'
         
-      onClickDelete: () ->
+      onClickDelete: ->
         @model.destroy()
 
-      onClickEdit: () ->
+      onClickEdit: ->
         name = @model.get( 'name' )
         Backbone.history.navigate(
           "section/#{name}/edit"

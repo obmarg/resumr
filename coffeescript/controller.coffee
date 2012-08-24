@@ -1,23 +1,18 @@
 define(
-  [ 'layouts/sectionOverview', 'models/section', 'models/stylesheet',
+  [ 'layouts/sectionOverview', 'layouts/editor'
+    'models/section', 'models/stylesheet',
     'collections/sectionList', 'views/sectionListView', 'views/sectionItemView',
     'views/sectionEditor', 'collections/sectionHistory',
     'views/sectionHistoryView', 'views/stylesheetEditor'
   ],
-  ( SectionOverviewLayout, Section, Stylesheet,
+  ( SectionOverviewLayout, EditorLayout
+    Section, Stylesheet,
     SectionList, SectionListView, SectionItemView,
     SectionEditor, SectionHistory,
     SectionHistoryView, StylesheetEditorView
   ) ->
     class Controller
       constructor: (@page, @vent) ->
-        # Load Temporary test data
-        content1 = $( '#tempData1' ).html()
-        content2 = $( '#tempData2' ).html()
-
-        section1 = new Section( content: content1 )
-        section2 = new Section( content: content2 )
-
         @sectionList = new SectionList()
         @sectionFetch = @sectionList.fetch()
         @stylesheet = new Stylesheet()
@@ -55,6 +50,7 @@ define(
           section = @sectionList.find( (item) ->
             item.get( 'name' ) == name
           )
+          # TODO: switch the section editor to use the editor layout
           layout = new SectionEditor( model: section )
           @page.show( layout )
           layout.createEditor()
@@ -89,8 +85,16 @@ define(
       stylesheetEdit: ->
         # Opens the stylesheet editor
         @stylesheetFetch.then( =>
-          layout = new StylesheetEditorView()
+          layout = new EditorLayout()
           @page.show( layout )
+
+          editor = new StylesheetEditorView()
+          layout.left.show( editor )
+          preview = new SectionListView(
+            collection: @sectionList
+            showTools: false
+          )
+          layout.right.show( preview )
           @vent.trigger( 'changepage', 'stylesheetEdit' )
         )
 

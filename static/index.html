@@ -129,14 +129,16 @@
 	</div>
 </script>
 <script id='section-item-template' type='text/template'>
-	<div class='section' id='section-<%= name %>'>
-		<div class='tools'>
-			<i class='icon-edit' title='Edit Section'></i>
-			<i class='icon-chevron-up' title='Move Section Up'></i>
-			<i class='icon-chevron-down' title='Move Section Down'></i>
-			<i class='icon-list' title='View Section History'></i>
-			<i class='icon-remove' title='Remove Section'></i>
-		</div>
+	<div class='<%= divClass %>' id='section-<%= name %>'>
+		<% if ( showTools ) { %>
+			<div class='tools'>
+				<i class='icon-edit' title='Edit Section'></i>
+				<i class='icon-chevron-up' title='Move Section Up'></i>
+				<i class='icon-chevron-down' title='Move Section Down'></i>
+				<i class='icon-list' title='View Section History'></i>
+				<i class='icon-remove' title='Remove Section'></i>
+			</div>
+		<% } %>
 		<%= content %>
 	</div>
 </script>
@@ -157,6 +159,22 @@
 				id='stylesheetEditor' 
 				class='span6' 
 				tabindex='2'></textarea>
+		</div>
+	</div>
+</script>
+<script id='editor-layout-template' type='text/template'>
+	<div id='editorToolbar' id='row-fluid'>
+	</div>
+	<div id='row-fluid'>
+		<div id='editorErrorContainer' class='span12 center-align'>
+		</div>
+	</div>
+	<div id='row-fluid'>
+		<div id='editorLeftPane' class='span6'>
+			&nbsp;
+		</div>
+		<div id='editorRightPane' class='span6'>
+			&nbsp;
 		</div>
 	</div>
 </script>
