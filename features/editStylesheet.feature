@@ -13,7 +13,7 @@ Feature: Edit Stylesheet
         Given I am on the main page
         When I click on #stylesheetLink
         Then I should be on the stylesheet page
-        And I should see "" in #stylesheetEdit
+        And I should see "" in #stylesheetEditor
 
     Scenario: Live preview
         Given I am on the stylesheet page

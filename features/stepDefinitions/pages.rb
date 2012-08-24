@@ -7,11 +7,11 @@ When /I view the main page/ do
 end
 
 Given /^I am on the stylesheet page$/ do
-  pending # express the regexp above with the code you wish you had
+  visit( '/#stylesheet' )
 end
 
 Then /^I should be on the stylesheet page$/ do
-  pending # express the regexp above with the code you wish you had
+  current_path_info().should == '/#stylesheet'
 end
 
 Then /^I should be on the view section history page for (\w+)$/ do |sectionName|
