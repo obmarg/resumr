@@ -13,35 +13,52 @@ Feature: Edit Stylesheet
         Given I am on the main page
         When I click on #stylesheetLink
         Then I should be on the stylesheet page
-        And I should see "" in #stylesheetEditor
+        And I should see "" in #editor
 
     Scenario: Live preview
         Given I am on the stylesheet page
-        When I enter "h3 { text-align: right; }" in #stylesheetEdit
+        When I enter "h3 { text-align: right; }" in the stylesheet editor
         Then I should see "textify" right aligned in #stylesheetPreview
 
     Scenario: Cancel editing
         Given I am on the stylesheet page
+        And I enter "h3 { text-align: right; }" in the stylesheet editor
         When I click on #cancelButton
         Then I should be on the stylesheet page
-        And I should see "" in #stylesheetEdit
+        And I should see "" in #editor
+
+    Scenario: Enter text then leave page
+        Given I am on the stylesheet page
+        And I enter "h3 { text-align: right; }" in the stylesheet editor
+        When I click on #sectionListLink
+        And I click on #stylesheetLink
+        Then I should be on the stylesheet page
+        And I should see "" in #editor
 
     Scenario: Submit form
         Given I am on the stylesheet page
-        And I enter "h3 { text-align: right; }" in #stylesheetEdit
+        And I enter "h3 { text-align: right; }" in the stylesheet editor
         When I click on #saveButton
         Then I should be on the stylesheet page
-        And I should see "h3 { text-align: right; }" in #stylesheetEdit
+        And I should see "h3 { text-align: right; }" in #editor
+
+    Scenario: Submit form, nav away then nav back
+        Given I am on the stylesheet page
+        And I enter "h3 { .opaque; }" in the stylesheet editor
+        And I click on #saveButton
+        And I click on #sectionListLink
+        When I click on #stylesheetLink
+        Then I should see "h3 { .opaque; }" in #editor
 
     Scenario: Validation failure
         Given I am on the stylesheet page
-        And I enter "h3 { " in #stylesheetEdit
+        And I enter "h3 { " in the stylesheet editor
         When I click on #saveButton
         Then I should see an error "invalid css" 
 
     Scenario: Submit then view index
         Given I am on the stylesheet page
-        And I enter "h3 { text-align: right; }" in #stylesheetEdit
+        And I enter "h3 { text-align: right; }" in the stylesheet editor
         When I click on #saveButton
         And I view the main page
         Then I should see "textify" right aligned in #section-no1

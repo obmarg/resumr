@@ -1,8 +1,8 @@
-Given /^I have entered "?(.*?)"? in (.*?)$/ do |text, field|
+Given /^I have entered "?(.*?)"? in (#.*?)$/ do |text, field|
   find( field ).set( text )
 end
 
-When /^I enter "?(.*?)"? in (.*?)$/ do |text, field|
+When /^I enter "?(.*?)"? in (#.*?)$/ do |text, field|
   find( field ).set( text )
 end
 
