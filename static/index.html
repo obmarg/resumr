@@ -153,20 +153,21 @@
 	</div>
 </script>
 <script id='stylesheet-editor-template' type='text/template'>
-	<div id='row-fluid'>
-		<div id='editor' class='span6'>
-			<textarea 
-				id='stylesheetEditor' 
-				class='span6' 
-				tabindex='2'></textarea>
-		</div>
+	<div id='editor'>
+		<textarea 
+			id='stylesheetEditor' 
+			class='span6' 
+			tabindex='2'></textarea>
 	</div>
 </script>
 <script id='editor-layout-template' type='text/template'>
-	<div id='editorToolbar' id='row-fluid'>
+	<div id='editorTitlebar' id='row-fluid'>
 	</div>
 	<div id='row-fluid'>
-		<div id='editorErrorContainer' class='span12 center-align'>
+		<div class='span12 center-align'>
+			<span id='editorError' class='transparent'>
+				Placeholder text
+			</span>
 		</div>
 	</div>
 	<div id='row-fluid'>
@@ -176,6 +177,27 @@
 		<div id='editorRightPane' class='span6'>
 			&nbsp;
 		</div>
+	</div>
+</script>
+<script id='editor-titlebar-template' type='text/template'>
+	<div id='row-fluid'>
+		<h3 class='span12'>
+			<%= title %> &nbsp; 
+			<% if ( isNew ) { %>
+				<input 
+					class='no-margin' 
+					type='text' 
+					id='nameField' 
+					placeholder='<%= namePlaceholder %>' 
+					tabindex='1'/> &nbsp;
+			<% } %>
+			<button id='saveButton' class='btn btn-primary' tabindex='3'>
+				<i class='icon-ok-sign icon-white'></i> Save
+			</button>
+			<button id='cancelButton' class='btn btn-danger' tabindex='4'>
+				Cancel
+			</button>
+		</h3>
 	</div>
 </script>
 </body>

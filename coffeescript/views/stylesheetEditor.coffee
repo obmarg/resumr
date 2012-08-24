@@ -19,5 +19,4 @@ define(
       doSave: ->
 
       doCancel: ->
-
 )

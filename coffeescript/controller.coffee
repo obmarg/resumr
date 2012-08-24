@@ -3,13 +3,13 @@ define(
     'models/section', 'models/stylesheet',
     'collections/sectionList', 'views/sectionListView', 'views/sectionItemView',
     'views/sectionEditor', 'collections/sectionHistory',
-    'views/sectionHistoryView', 'views/stylesheetEditor'
+    'views/sectionHistoryView', 'views/stylesheetEditor', 'views/editorTitlebar'
   ],
   ( SectionOverviewLayout, EditorLayout
     Section, Stylesheet,
     SectionList, SectionListView, SectionItemView,
     SectionEditor, SectionHistory,
-    SectionHistoryView, StylesheetEditorView
+    SectionHistoryView, StylesheetEditorView, EditorTitlebar
   ) ->
     class Controller
       constructor: (@page, @vent) ->
@@ -95,6 +95,15 @@ define(
             showTools: false
           )
           layout.right.show( preview )
+          titlebar = new EditorTitlebar(
+            title: "Editing Stylesheet"
+          )
+          layout.titlebar.show( titlebar )
+
+          editor.bindTo( titlebar, 'save', editor.doSave )
+          editor.bindTo( titlebar, 'cancel', editor.doCancel )
+          layout.bindTo( editor, 'error', layout.setError )
+
           @vent.trigger( 'changepage', 'stylesheetEdit' )
         )
 
