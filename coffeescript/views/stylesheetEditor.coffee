@@ -4,6 +4,9 @@ define(
     class StylesheetEditor extends Backbone.Marionette.ItemView
       template: '#stylesheet-editor-template'
 
+      updateTimeout: 500
+      cssRegexp: /(\}?)\s*(.*?)\{/gm
+
       events:
         'change #stylesheetEditor': 'onBaseChange'
 
@@ -15,6 +18,7 @@ define(
         textArea = @$el.find( '#stylesheetEditor' )[0]
         @codeMirror = CodeMirror.fromTextArea(textArea,
           lineWrapping: true
+          onChange: => @onChange()
         )
         @codeMirror.setValue( @model.get('content') )
 
@@ -24,13 +28,37 @@ define(
         # needed for some tests
         @codeMirror.setValue( $( '#stylesheetEditor' ).val() )
 
+      onChange: ->
+        # Called by code mirror when the contents change
+        if @updateTimeoutId?
+          clearTimeout( @updateTimeoutId )
+        @updateTimeoutId = setTimeout( =>
+            @updatePreview()
+          , @updateTimeout
+        )
+
+      getPreviewCss: ->
+        # Function called to get the css used for previews
+        css = @codeMirror.getValue()
+        css.replace(@cssRegexp, '$1\n\n#editorRightPane $2 {')
+
+      updatePreview: ->
+        css = $( '#stylesheetEditorPreviewCss' )
+        if css.size() == 0
+          $( 'head' ).append(
+            "<style id='stylesheetEditorPreviewCss'></style>"
+          )
+        elem = css[0]
+        css.text( @getPreviewCss() )
+
       doSave: ->
         @model.save( content: @codeMirror.getValue(),
           success: =>
             #TODO: potentially close the view or something?
           error: =>
-            #TODO: display error message.
-            #       But for now, let's check what else happens
+            #TODO: Fire error event.
+            #      For now, let's check what happens by default.
+            #      Could be an event fires automatically...
         )
 
       doCancel: ->

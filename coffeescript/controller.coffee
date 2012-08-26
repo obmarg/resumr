@@ -9,7 +9,7 @@ define(
     Section, Stylesheet,
     SectionList, SectionListView, SectionItemView,
     SectionEditor, SectionHistory,
-    SectionHistoryView, StylesheetEditorView, EditorTitlebar
+    SectionHistoryView, StylesheetEditor, EditorTitlebar
   ) ->
     class Controller
       constructor: (@page, @vent) ->
@@ -88,8 +88,9 @@ define(
           layout = new EditorLayout()
           @page.show( layout )
 
-          editor = new StylesheetEditorView()
+          editor = new StylesheetEditor( model: @stylesheet )
           layout.left.show( editor )
+          editor.createEditor()
           preview = new SectionListView(
             collection: @sectionList
             showTools: false
