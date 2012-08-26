@@ -19,6 +19,9 @@ define(
         @sectionFetch = @sectionList.fetch()
         @stylesheet = new Stylesheet()
         @stylesheetFetch = @stylesheet.fetch()
+        @styler = new Styler('stylesheet', '.styleParent')
+        @stylesheet.on('change', => @styler.update(@stylesheet.get('content')))
+        @stylesheet.on('reset', => @styler.update(@stylesheet.get('content')))
 
       sectionOverview: ->
         layout = new SectionOverviewLayout()
@@ -27,6 +30,7 @@ define(
 
         sectionListView = new SectionListView(
           collection: @sectionList
+          className: 'styleParent'
         )
         layout.content.show( sectionListView )
         @vent.trigger( 'changepage', 'sectionOverview' )

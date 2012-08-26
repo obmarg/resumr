@@ -21,12 +21,12 @@ Feature: Edit Stylesheet
         When I click on #stylesheetLink
         Then I should be on the stylesheet page
         And I should see "h3 {text-align:right;}" in #editor
-        And the style tag should contain "#editorRightPane h3 {text-align:right;}"
+        And the style tag #stylesheetEditorPreviewCss should contain "#editorRightPane h3 {text-align:right;}"
 
     Scenario: Live preview after edit
         Given I am on the stylesheet page
         When I enter "h3 {text-align:right;}" in the stylesheet editor
-        Then the style tag should contain "#editorRightPane h3 {text-align:right;}"
+        Then the style tag #stylesheetEditorPreviewCss should contain "#editorRightPane h3 {text-align:right;}"
 
     Scenario: Cancel editing
         Given I am on the stylesheet page
@@ -60,7 +60,9 @@ Feature: Edit Stylesheet
 
     Scenario: Submit then view index
         Given I am on the stylesheet page
-        And I enter "h3 { text-align: right; }" in the stylesheet editor
+        And I enter "h3 {text-align:right;}" in the stylesheet editor
         When I click on #saveButton
         And I view the main page
-        Then I should see "textify" right aligned in #section-no1
+        Then the style tag #stylesheet should contain ".styleParent h3 {text-align:right;}"
+
+    #TODO: Would be nice to actually verify computed styles etc...

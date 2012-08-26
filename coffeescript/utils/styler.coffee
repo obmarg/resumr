@@ -11,11 +11,13 @@ define(
         content.replace(@cssRegexp, "$1\n\n#{@parentCssSelector} $2{")
 
       update: (content) ->
-        css = $( '#' + @elementId )
+        selector = '#' + @elementId 
+        css = $(selector)
         if css.size() == 0
           $( 'head' ).append(
             "<style id='#{@elementId}'></style>"
           )
+          css = $(selector)
         elem = css[0]
         css.text(@localiseCss(content))
 
