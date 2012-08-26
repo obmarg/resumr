@@ -21,6 +21,7 @@ define(
           onChange: => @onChange()
         )
         @codeMirror.setValue( @model.get('content') )
+        @updatePreview()
 
       onBaseChange: ->
         # Called whenever the base html text area is changed.

@@ -15,10 +15,18 @@ Feature: Edit Stylesheet
         Then I should be on the stylesheet page
         And I should see "" in #editor
 
-    Scenario: Live preview
+    Scenario: Live preview on open stylesheet page
+        Given I have a stylesheet containing "h3 {text-align:right;}"
+        And I am on the main page
+        When I click on #stylesheetLink
+        Then I should be on the stylesheet page
+        And I should see "h3 {text-align:right;}" in #editor
+        And the style tag should contain "#editorRightPane h3 {text-align:right;}"
+
+    Scenario: Live preview after edit
         Given I am on the stylesheet page
-        When I enter "h3 { text-align:right; }" in the stylesheet editor
-        Then the style tag should contain "#editorRightPane h3 { text-align:right; }"
+        When I enter "h3 {text-align:right;}" in the stylesheet editor
+        Then the style tag should contain "#editorRightPane h3 {text-align:right;}"
 
     Scenario: Cancel editing
         Given I am on the stylesheet page
