@@ -4,7 +4,7 @@ import json
 import unittest
 import mox
 from StringIO import StringIO
-from db import Section, Document, SectionNotFound, RepoNotFound
+from db import Section, Document, ContentNotFound, RepoNotFound, Stylesheet
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
@@ -200,7 +200,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'missing' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'missing' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.get( '/api/sections/missing' )
@@ -271,7 +271,7 @@ class ResumrTests(TestCase):
         inputStr = json.dumps( inputStruct )
         inputStream = StringIO( inputStr )
 
-        doc.FindSection( 'jenga' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'jenga' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.put(
@@ -373,7 +373,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'charlie' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'charlie' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.get( '/api/sections/charlie/history' )
@@ -407,7 +407,7 @@ class ResumrTests(TestCase):
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
 
-        doc.FindSection( 'zordon' ).AndRaise( SectionNotFound )
+        doc.FindSection( 'zordon' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
         rv = self.client.post( '/api/sections/zordon/history/select/35' )
@@ -452,23 +452,30 @@ class ResumrTests(TestCase):
 
         expected = []
         for i, s in sections:
+            s.name = '%i' % i
             contentStr = 'content' + str(i)
             markdownStr = 'markdown' + str(i)
             s.CurrentContent().AndReturn( contentStr )
             resumr.markdown.markdown(
                     contentStr
                     ).AndReturn( markdownStr )
-            expected.append( markdownStr )
+            expected.append(dict(name='%i' % i, content=markdownStr))
+
+        mockStylesheet = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( mockStylesheet )
+        mockStylesheet.CurrentContent().AndReturn('h3 {}')
 
         self.mox.ReplayAll()
         rv = self.client.get( '/render' )
         self.assert200( rv )
         self.assertTemplateUsed( 'render.html' )
         self.assertContext( 'sections', expected )
+        self.assertContext( 'stylesheet', 'h3 {}' )
 
         # Check that the output contains all the expected text
         for text in expected:
-            self.assertIn( text, rv.data )
+            self.assertIn( text['content'], rv.data )
+        self.assertIn( 'h3 {}', rv.data )
 
     def testRenderNotLoggedIn(self):
         self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
@@ -589,6 +596,130 @@ class ResumrTests(TestCase):
         for url in systemTestUrls:
             rv = self.client.get(url)
             self.assertStatus(rv, 403)
+
+    def testGetCurrentStylesheet(self):
+        '''
+        Testing the get current stylesheet API
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        cssContent = 'h1 { text-align: test; }'
+        style.CurrentContent().AndReturn( cssContent )
+
+        expected = { 'content': cssContent }
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/api/stylesheet' )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+        self.assertEqual( expected, rv.json )
+
+    def testGetStylesheetHistory(self):
+        '''
+        Testing the get stylesheet history API
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        contentHistory = [ 'one', 'two', 'three' ]
+        style.ContentHistory().AndReturn( contentHistory )
+
+        expected = [{ 'content': c } for c in contentHistory]
+
+        self.mox.ReplayAll()
+        rv = self.client.get( '/api/stylesheet/history' )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+        self.assertEqual( expected, rv.json )
+
+    def testSetStylesheetContent(self):
+        '''
+        Testing the set stylesheet content API
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        style.CurrentContent().AndReturn( '' )
+        style.SetContent( 'xyzz' )
+
+        inputStruct = { 'content': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+
+    def testSetStylesheetContentNoChange(self):
+        '''
+        Testing the set stylesheet content API ignores duplicate data
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        style.CurrentContent().AndReturn( 'xyzz' )
+
+        inputStruct = { 'content': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 200)
+
+    def testSetStylesheetMissingContent(self):
+        '''
+        Testing the set stylesheet content API w/out content
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        inputStruct = { 'somethingElse': 'xyzz' }
+        inputStr = json.dumps( inputStruct )
+        inputStream = StringIO( inputStr )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/stylesheet',
+                input_stream=inputStream,
+                content_type='application/json',
+                content_length=len(inputStr)
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 500)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import shutil
 import sys
 from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
-from db import Document, SectionNotFound, RepoNotFound
+from db import Document, ContentNotFound, RepoNotFound
 from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 
 SYSTEMTEST_PORT = 43001
@@ -99,6 +99,13 @@ def index():
     return redirect( url_for( 'Login' ) )
 
 
+##############
+#
+# Sections API
+#
+##############
+
+
 @app.route('/api/sections', methods=['GET'])
 def ListSections():
     ''' Lists the current sections including order '''
@@ -120,7 +127,7 @@ def GetSection(name):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     return json.dumps({
         'name': s.name,
@@ -164,7 +171,7 @@ def UpdateSection(name):
             section.SetContent( request.json[ 'content' ] )
         if section.GetPosition() != request.json[ 'pos' ]:
             section.SetPosition( request.json[ 'pos' ] )
-    except SectionNotFound:
+    except ContentNotFound:
         abort(404)
     return "OK"
 
@@ -200,7 +207,7 @@ def SectionHistory(name):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     data = []
     for i, d in enumerate( s.ContentHistory() ):
@@ -225,7 +232,7 @@ def SelectSectionHistory( name, historyId ):
     d = GetDoc()
     try:
         s = d.FindSection( name )
-    except SectionNotFound:
+    except ContentNotFound:
         abort( 404 )
     for i, d in enumerate( s.ContentHistory() ):
         if i == historyId:
@@ -235,17 +242,79 @@ def SelectSectionHistory( name, historyId ):
     abort( 404 )
 
 
+#############
+#
+# Stylesheet API
+#
+#############
+
+@app.route( '/api/stylesheet', methods=['GET'] )
+def GetStylesheet():
+    '''
+    Gets the current stylesheet contents
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    return json.dumps({'content': stylesheet.CurrentContent()})
+
+
+@app.route('/api/stylesheet/history', methods=['GET'])
+def GetStylesheetHistory():
+    '''
+    Gets the history of the stylesheet
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    data = [{'content': c} for c in stylesheet.ContentHistory()]
+    return json.dumps(data)
+
+
+@app.route('/api/stylesheet', methods=['PUT'])
+def SetStylesheetContent():
+    '''
+    Sets the current content of the stylesheet
+    '''
+    d = GetDoc()
+    stylesheet = d.GetStylesheet()
+    try:
+        content = request.json['content']
+        # TODO: need to validate the content is actually css/less
+        # TODO: some simple size validation would be good too,
+        #       don't want some sort of DOS style attack w/ massive files
+    except KeyError:
+        abort( 500 )
+    if stylesheet.CurrentContent() != content:
+        stylesheet.SetContent( content )
+    return "OK"
+
+#############
+#
+# Misc routes
+#
+#############
+
+
 @app.route('/render')
 def Render():
     if not IsLoggedIn():
         return redirect( url_for( 'Login' ) )
     d = GetDoc()
-    sections = [ s for i, s in d.CurrentSections() ]
-    sections = [ markdown.markdown( s.CurrentContent() ) for s in sections ]
+    sections = [
+            dict(name=s.name, content=markdown.markdown(s.CurrentContent()))
+            for i, s in d.CurrentSections()
+            ]
     return render_template(
             'render.html',
-            sections=sections
+            sections=sections,
+            stylesheet=d.GetStylesheet().CurrentContent()
             )
+
+
+##########
+#
+# Authentication Routes
+#
+##########
 
 
 @app.route('/login')
@@ -292,6 +361,13 @@ def OAuthCallback(serviceName):
     except KeyError:
         abort( 500 )
     # TODO: Handle the various other error types here
+
+
+#############
+#
+# System Test Utils
+#
+#############
 
 
 @app.route( '/systemtest/reset' )

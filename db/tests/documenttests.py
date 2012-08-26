@@ -4,7 +4,7 @@ import pygit2
 from .. import doc
 from .. import sectionindex
 from ..constants import SECTION_INDEX_FILENAME
-from .defs import BaseTest, TestObjectType
+from .defs import BaseTest
 
 
 class DocumentTests(BaseTest):
@@ -15,6 +15,7 @@ class DocumentTests(BaseTest):
     def setUp( self ):
         super( DocumentTests, self ).setUp()
         self.mox.StubOutClassWithMocks(doc, 'Section')
+        self.mox.StubOutClassWithMocks(doc, 'Stylesheet')
         self.mox.StubOutClassWithMocks(doc, 'Repository')
         self.mox.StubOutWithMock(doc, 'init_repository')
         self.mox.StubOutWithMock(doc, 'CommitBlob')
@@ -35,7 +36,7 @@ class DocumentTests(BaseTest):
 
     def testCreate( self ):
         '''
-        Tests creation of document
+        Testing db.Document constructor with create parameter
         '''
 
         # Create a mock repo
@@ -60,7 +61,7 @@ class DocumentTests(BaseTest):
 
     def testConstructNoCreate( self ):
         '''
-        Tests construction without create
+        Testing db.Document constructor without create parameter
         '''
         self._createMockRepo()
 
@@ -71,7 +72,7 @@ class DocumentTests(BaseTest):
 
     def testConstructWithRootPath( self ):
         '''
-        Tests construction when we supply a root path
+        Testing db.Document constructor with root path parameter
         '''
         testPath = os.path.join( '/', 'something', 'otherPath' )
         doc.Repository(
@@ -83,8 +84,7 @@ class DocumentTests(BaseTest):
 
     def testNoRepo( self ):
         '''
-        Tests that the correct exception is thrown
-        if a repo doesn't exist
+        Testing db.Document constructor when repo is missing
         '''
         self.mox.UnsetStubs()
         self.mox.StubOutWithMock(doc, 'Repository')
@@ -104,30 +104,17 @@ class DocumentTests(BaseTest):
 
     def testAddSection( self ):
         '''
-        Tests adding a section
+        Testing db.Document.AddSection
         '''
         self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
         mockRepo = self._createMockRepo()
 
-        doc.CommitBlob(
-                mockRepo, 'content', 'sectionName',
-                'Created section sectionName'
-                ).AndReturn( 'commitId' )
+        mockSection = doc.Section('sectionName', mockRepo, create=True)
+        mockSection.Create(content='content')
 
-        mockRef = TestObjectType( 'oid' )
-
-        mockRepo.create_reference(
-                'refs/heads/sections/sectionName',
-                'commitId'
-                ).AndReturn( mockRef )
         mockSectionIndex = doc.SectionIndex( mockRepo )
         mockSectionIndex.AddSection( 'sectionName' )
         mockSectionIndex.Save( mockRepo )
-        mockRepo[ 'oid' ].AndReturn( 'commit' )
-
-        mockSection = doc.Section(
-                'sectionName', 'commit', mockRepo
-                )
 
         self.mox.ReplayAll()
         d = doc.Document( 'name' )
@@ -139,7 +126,9 @@ class DocumentTests(BaseTest):
         self.assertEqual( mockSection, s )
 
     def testRemoveSection( self ):
-        '''Tests removing a section'''
+        '''
+        Testing db.Document.RemoveSection
+        '''
         self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
         mockRepo = self._createMockRepo()
 
@@ -156,56 +145,34 @@ class DocumentTests(BaseTest):
 
     def testListSections( self ):
         '''
-        Tests the Sections function
+        Testing db.Document.Sections
         '''
         mockRepo = self._createMockRepo()
-
-        mockRef = TestObjectType( 'oid' )
-        mockRef2 = TestObjectType( 'oid2' )
 
         mockRepo.listall_references().AndReturn( [
             'refs/heads/sections/section',
             'refs/heads/sections/anotherSection',
-            'refs/heads/master'
+            'refs/heads/master',
+            'refs/heads/stylesheet',
             ] )
 
-        mockRepo.lookup_reference(
-                'refs/heads/sections/section'
-                ).AndReturn( mockRef )
-        mockRepo[ 'oid' ].AndReturn( 'commit1' )
-        mockSection1 = doc.Section( 'section', 'commit1', mockRepo )
-
-        mockRepo.lookup_reference(
-                'refs/heads/sections/anotherSection'
-                ).AndReturn( mockRef2 )
-        mockRepo[ 'oid2' ].AndReturn( 'commit2' )
-        mockSection2 = doc.Section( 'anotherSection', 'commit2', mockRepo )
+        mockSection1 = doc.Section( 'section', mockRepo )
+        mockSection2 = doc.Section( 'anotherSection', mockRepo )
 
         self.mox.ReplayAll()
 
         d = doc.Document( 'name' )
-
         sections = list( d.Sections() )
-
         self.assertEqual( sections, [ mockSection1, mockSection2 ] )
-
         self.mox.VerifyAll()
 
     def testFindSection( self ):
         '''
-        Tests the find section function
+        Testing db.Document.FindSection
         '''
         mockRepo = self._createMockRepo()
 
-        mockRef = TestObjectType( 'oid' )
-
-        mockRepo.lookup_reference(
-                'refs/heads/sections/section'
-                ).AndReturn( mockRef )
-
-        mockRepo[ 'oid' ].AndReturn( 'commit' )
-
-        mockSection = doc.Section( 'section', 'commit', mockRepo )
+        mockSection = doc.Section( 'section', mockRepo )
 
         self.mox.ReplayAll()
 
@@ -215,30 +182,9 @@ class DocumentTests(BaseTest):
         self.mox.VerifyAll()
         self.assertEqual( mockSection, s )
 
-    def testFindMissingSection( self ):
-        '''
-        Tests finding a missing section
-        '''
-        mockRepo = self._createMockRepo()
-
-        mockRepo.lookup_reference(
-                'refs/heads/sections/section'
-                ).AndRaise( KeyError )
-
-        self.mox.ReplayAll()
-
-        d = doc.Document( 'name' )
-
-        self.assertRaises(
-                doc.SectionNotFound,
-                lambda: d.FindSection( 'section' )
-                )
-
-        self.mox.VerifyAll()
-
     def testCurrentSections( self ):
         '''
-        Tests the current sections function
+        Testing db.Document.CurrentSections
         '''
         mockRepo = self._createMockRepo()
         self.mox.StubOutClassWithMocks( doc, 'SectionIndex' )
@@ -271,5 +217,18 @@ class DocumentTests(BaseTest):
 
         self.mox.VerifyAll()
 
+    def testGetStylesheet(self):
+        '''
+        Testing db.Document.GetStylesheet
+        '''
+        mockRepo = self._createMockRepo()
 
+        mockStylesheet = doc.Stylesheet( 'stylesheet', mockRepo )
 
+        self.mox.ReplayAll()
+
+        d = doc.Document( 'name' )
+        s = d.GetStylesheet()
+
+        self.mox.VerifyAll()
+        self.assertEqual( mockStylesheet, s )

@@ -19,7 +19,7 @@ class SectionIndexTests(BaseTest):
         # Set up our fake commit
         testCommit = TestCommitType(
                 { SECTION_INDEX_FILENAME : TestObjectType( 'indexOid' ) },
-                'unused'
+                'unused', []
                 )
         testBlob = TestBlobType( 'someData' )
 
@@ -142,7 +142,7 @@ class SectionIndexTests(BaseTest):
         self.assertEqual( 2, index.GetSectionPosition( 'footer' ) )
         self.assertEqual( 0, index.GetSectionPosition( 'header' ) )
         self.assertRaises(
-                sectionindex.SectionNotFound,
+                sectionindex.ContentNotFound,
                 lambda: index.GetSectionPosition( 'missing' )
                 )
 
@@ -210,7 +210,7 @@ class SectionIndexTests(BaseTest):
 
         # Check section not found is raised
         self.assertRaises(
-                sectionindex.SectionNotFound,
+                sectionindex.ContentNotFound,
                 lambda: index.SetSectionPosition( 'none', 10 )
                 )
 

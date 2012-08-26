@@ -4,9 +4,13 @@ define(
     class SectionListView extends Backbone.Marionette.CollectionView
       itemView: SectionItemView
 
-      initialize: () ->
+      initialize: ->
         @bindTo( this, 'itemview:moveUp', @itemMoveUp )
         @bindTo( this, 'itemview:moveDown', @itemMoveDown )
+        @options.showTools ?= true
+
+      itemViewOptions: ->
+        showTools: @options.showTools
 
       itemMoveUp: (item) ->
         model = item.model

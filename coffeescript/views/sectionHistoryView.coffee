@@ -3,6 +3,8 @@ define(
   ( SectionHistoryItemView ) ->
     class SectionHistoryView extends Backbone.Marionette.CollectionView
       itemView: SectionHistoryItemView
+
+      className: 'styleParent'
       
       initialize: ->
         @bindTo( this, 'itemview:onSelectSection', @onSelectSection )

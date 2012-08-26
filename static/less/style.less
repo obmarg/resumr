@@ -13,52 +13,56 @@ body {
    ========================================================================== */
 
 .rounded-corners (@radius: 5px) {
-  border-radius: @radius;
-  -webkit-border-radius: @radius;
-  -moz-border-radius: @radius;
+  .border-radius( @radius );
 }
 
 .transparent {
-    opacity:0;
-    filter:alpha(opacity=0);
-
+    .opacity( 0 );
     .transition(opacity 1s);
 }
 
 .opaque {
-    opacity:1;
-    filter:alpha(opacity=100);
-
+    .opacity( 100 );
     .transition(opacity 1s);
+}
+
+.listItem {
+    padding: 5px;
+    margin-bottom: 3px;
+}
+
+.listItemWithMouseOver {
+    .listItem;
+
+    border: 1px solid white;
+    .rounded-corners;
+    
+    .transition(border-color 1s);
+    
+    .tools {
+        float:right;
+        .transparent;
+    }
+
+    &:hover {
+        border: 1px solid @grayLight;
+        .rounded-corners;
+
+        .transition(border-color 1s);
+
+        .tools {
+            .opacity( 80 );
+            .transition(opacity 1s);
+        }
+    }
 }
 
 .section {
-    border: 1px solid white;
-    .rounded-corners;
-    padding: 5px;
-
-    margin-bottom: 3px;
-    
-    .transition(border-color 1s);
+    .listItemWithMouseOver;
 }
 
-.section:hover {
-    border: 1px solid @grayLight;
-    .rounded-corners;
-
-    .transition(border-color 1s);
-}
-
-.section .tools {
-    float:right;
-    .transparent;
-}
-
-.section:hover .tools {
-    opacity:0.8;
-    filter:alpha(opacity=80);
-
-    .transition(opacity 1s);
+.historyItem {
+    .listItemWithMouseOver;
 }
 
 // Markdown styles
@@ -147,32 +151,8 @@ body {
     text-align: center;
 }
 
-.historyItem {
-    border: 1px solid white;
-    .rounded-corners;
-    padding: 5px;
-
-    margin-bottom: 3px;
-
-    .transition(border-color 1s);
-}
-
-.historyItem:hover {
+.CodeMirror-wrap {
     border: 1px solid @grayLight;
+    padding: 2px;
     .rounded-corners;
-
-    .transition(border-color 1s);
 }
-
-.historyItem .tools {
-    float:right;
-    .transparent;
-}
-
-.historyItem:hover .tools {
-    opacity:0.8;
-    filter:alpha(opacity=80);
-
-    .transition(opacity 1s);
-}
-

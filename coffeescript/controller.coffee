@@ -1,21 +1,27 @@
 define(
-  [ 'layouts/sectionOverview', 'models/section', 'collections/sectionList', 'views/sectionListView', 'views/sectionItemView', 'views/sectionEditor', 'collections/sectionHistory', 'views/sectionHistoryView' ],
-  ( SectionOverviewLayout, Section, SectionList, SectionListView, SectionItemView, SectionEditor, SectionHistory, SectionHistoryView ) ->
+  [ 'layouts/sectionOverview', 'layouts/editor'
+    'models/section', 'models/stylesheet',
+    'collections/sectionList', 'views/sectionListView', 'views/sectionItemView',
+    'views/sectionEditor', 'collections/sectionHistory',
+    'views/sectionHistoryView', 'views/stylesheetEditor', 'views/editorTitlebar',
+    'utils/styler'
+  ],
+  ( SectionOverviewLayout, EditorLayout
+    Section, Stylesheet,
+    SectionList, SectionListView, SectionItemView,
+    SectionEditor, SectionHistory,
+    SectionHistoryView, StylesheetEditor, EditorTitlebar,
+    Styler
+  ) ->
     class Controller
       constructor: (@page, @vent) ->
-        # Load Temporary test data
-        content1 = $( '#tempData1' ).html()
-        content2 = $( '#tempData2' ).html()
-
-        section1 = new Section( content: content1 )
-        section2 = new Section( content: content2 )
-
-        @sectionFetch = $.Deferred()
         @sectionList = new SectionList()
-        @sectionList.fetch(
-          success: => @sectionFetch.resolve()
-          failure: => @sectionFetch.reject()
-        )
+        @sectionFetch = @sectionList.fetch()
+        @stylesheet = new Stylesheet()
+        @stylesheetFetch = @stylesheet.fetch()
+        @styler = new Styler('stylesheet', '.styleParent')
+        @stylesheet.on('change', => @styler.update(@stylesheet.get('content')))
+        @stylesheet.on('reset', => @styler.update(@stylesheet.get('content')))
 
       sectionOverview: ->
         layout = new SectionOverviewLayout()
@@ -24,6 +30,7 @@ define(
 
         sectionListView = new SectionListView(
           collection: @sectionList
+          className: 'styleParent'
         )
         layout.content.show( sectionListView )
         @vent.trigger( 'changepage', 'sectionOverview' )
@@ -49,6 +56,7 @@ define(
           section = @sectionList.find( (item) ->
             item.get( 'name' ) == name
           )
+          # TODO: switch the section editor to use the editor layout
           layout = new SectionEditor( model: section )
           @page.show( layout )
           layout.createEditor()
@@ -80,6 +88,36 @@ define(
           @vent.trigger( 'changepage', 'sectionHistory' )
         )
 
+      stylesheetEdit: ->
+        # Opens the stylesheet editor
+        @stylesheetFetch.then( =>
+          layout = new EditorLayout()
+          @page.show( layout )
+
+          previewStyler = new Styler(
+            'stylesheetEditorPreviewCss', '#editorRightPane'
+          )
+
+          editor = new StylesheetEditor( model: @stylesheet )
+          layout.left.show( editor )
+          editor.bindTo( editor, 'change', previewStyler.update, previewStyler )
+          editor.createEditor()
+          preview = new SectionListView(
+            collection: @sectionList
+            showTools: false
+          )
+          layout.right.show( preview )
+          titlebar = new EditorTitlebar(
+            title: "Editing Stylesheet"
+          )
+          layout.titlebar.show( titlebar )
+
+          editor.bindTo( titlebar, 'save', editor.doSave )
+          editor.bindTo( titlebar, 'cancel', editor.doCancel )
+          layout.bindTo( editor, 'error', layout.setError )
+
+          @vent.trigger( 'changepage', 'stylesheetEdit' )
+        )
 
     return Controller
 )

@@ -5,7 +5,7 @@ define(
       template: '#section-editor-template'
 
       events:
-        'click #saveButton' : 'doSave' 
+        'click #saveButton' : 'doSave'
         'click #cancelButton' : 'doCancel'
 
       initialize: ->

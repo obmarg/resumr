@@ -24,10 +24,8 @@ define(
     app.vent.on( 'changepage', (pageName) ->
       # First, remove all active links from nav bar
       $( '#nav-left > li' ).removeClass( 'active' )
-      if pageName == 'sectionOverview'
-        $( '#overallNav' ).addClass( 'active' )
-      else if pageName == 'sectionNew'
-        $( '#newNav' ).addClass( 'active' )
+      # Then add an active link to the appropriate page
+      $( "##{pageName}Nav" ).addClass( 'active' )
     )
 
     return app

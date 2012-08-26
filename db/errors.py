@@ -3,7 +3,7 @@ Contains the various database related exceptions
 '''
 
 
-class SectionNotFound(Exception):
+class ContentNotFound(Exception):
     pass
 
 

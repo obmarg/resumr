@@ -18,6 +18,7 @@
 	<script src="js/libs/less-1.3.0.min.js"></script>
 	-->
 	<link rel="stylesheet" href="static/less/style.css">
+	<link rel="stylesheet" href="static/js/libs/CodeMirror/codemirror.css"
 	
 	<script src="static/js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
 </head>
@@ -35,13 +36,13 @@
           <a class="brand" href="#">Resumr</a>
           <div class="nav-collapse">
             <ul id='nav-left' class="nav">
-							<li id='overallNav'>
+							<li id='sectionOverviewNav'>
 								<a id='sectionListLink' href="#">Overall Layout</a>
 							</li>
-							<li id='newNav'>
+							<li id='sectionNewNav'>
 								<a id='newSectionLink' href="#newSection">Add New Section</a>
 							</li>
-              <li id='styleNav'><a id='cssLink' href="#css">Stylesheet</a></li>
+              <li id='stylesheetEditNav'><a id='stylesheetLink' href="#stylesheet">Stylesheet</a></li>
               <li id='renderNav'><a id='renderLink' href="render">Render</a></li>
             </ul>
 						<ul class='nav pull-right'>
@@ -120,7 +121,7 @@
 				class='span6' 
 				tabindex='2'><%= item.content %></textarea>
 		</div>
-		<div id='preview' class='span6'>
+		<div id='preview' class='span6 styleParent'>
 			<div class='wmd-button-row'>&nbsp;</div>
 			<div id='wmd-preview'>
 			</div>
@@ -128,14 +129,16 @@
 	</div>
 </script>
 <script id='section-item-template' type='text/template'>
-	<div class='section' id='section-<%= name %>'>
-		<div class='tools'>
-			<i class='icon-edit' title='Edit Section'></i>
-			<i class='icon-chevron-up' title='Move Section Up'></i>
-			<i class='icon-chevron-down' title='Move Section Down'></i>
-			<i class='icon-list' title='View Section History'></i>
-			<i class='icon-remove' title='Remove Section'></i>
-		</div>
+	<div class='<%= divClass %>' id='section-<%= name %>'>
+		<% if ( showTools ) { %>
+			<div class='tools'>
+				<i class='icon-edit' title='Edit Section'></i>
+				<i class='icon-chevron-up' title='Move Section Up'></i>
+				<i class='icon-chevron-down' title='Move Section Down'></i>
+				<i class='icon-list' title='View Section History'></i>
+				<i class='icon-remove' title='Remove Section'></i>
+			</div>
+			<% } %>
 		<%= content %>
 	</div>
 </script>
@@ -149,6 +152,53 @@
 		</div>
 	</div>
 </script>
-
+<script id='stylesheet-editor-template' type='text/template'>
+	<div id='editor'>
+		<textarea 
+			id='stylesheetEditor' 
+			class='span6' 
+			tabindex='2'></textarea>
+	</div>
+</script>
+<script id='editor-layout-template' type='text/template'>
+	<div id='editorTitlebar' id='row-fluid'>
+	</div>
+	<div id='row-fluid'>
+		<div class='span12 center-align'>
+			<span id='editorError' class='transparent'>
+				Placeholder text
+			</span>
+		</div>
+	</div>
+	<div id='row-fluid'>
+		<div id='editorLeftPane' class='span6'>
+			&nbsp;
+		</div>
+		<div id='editorRightPane' class='span6'>
+			&nbsp;
+		</div>
+	</div>
+</script>
+<script id='editor-titlebar-template' type='text/template'>
+	<div id='row-fluid'>
+		<h3 class='span12'>
+			<%= title %> &nbsp; 
+			<% if ( isNew ) { %>
+				<input 
+					class='no-margin' 
+					type='text' 
+					id='nameField' 
+					placeholder='<%= namePlaceholder %>' 
+					tabindex='1'/> &nbsp;
+			<% } %>
+			<button id='saveButton' class='btn btn-primary' tabindex='3'>
+				<i class='icon-ok-sign icon-white'></i> Save
+			</button>
+			<button id='cancelButton' class='btn btn-danger' tabindex='4'>
+				Cancel
+			</button>
+		</h3>
+	</div>
+</script>
 </body>
 </html>

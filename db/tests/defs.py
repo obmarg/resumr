@@ -11,7 +11,7 @@ class BaseTest(unittest.TestCase):
         self.mox.UnsetStubs()
 
 TestBlobType = namedtuple( 'TestBlobType', [ 'data' ] )
-TestCommitType = namedtuple( 'TestCommitType', [ 'tree', 'oid' ] )
+TestCommitType = namedtuple( 'TestCommitType', [ 'tree', 'oid', 'parents' ] )
 TestObjectType = namedtuple( 'TestObjectType', 'oid' )
 
 

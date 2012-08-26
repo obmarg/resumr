@@ -49,8 +49,8 @@ class GitUtilsTests(BaseTest):
         message = 'a brilliant message'
         testUpdateRef = 'something'
         parentCommits = [
-                TestCommitType( 'tree0', 'oid0' ),
-                TestCommitType( 'tree1', 'oid1' )
+                TestCommitType( 'tree0', 'oid0', [] ),
+                TestCommitType( 'tree1', 'oid1', [] )
                 ]
 
         # Mock out the time function

@@ -1,73 +1,24 @@
 
-import pygit2
+from content import ContentTests
 from .. import section
-from .defs import BaseTest, TestObjectType, TestBlobType
+from .. import gitutils
+from ..constants import SECTION_REF_PREFIX
 
 
-class SectionTests(BaseTest):
+class SectionTests(ContentTests):
     '''
-    Tests the section class
-
-    Currently this only tests the
-    CurrentContent & SetContent functions
-
-    TODO: Write the rest of the tests
+    Section Class Tests
     '''
+
+    TestClass = section.Section
+    CommitRefPrefix = SECTION_REF_PREFIX
 
     def setUp( self ):
         super( SectionTests, self ).setUp()
-        self.mox.StubOutWithMock(section, 'CommitBlob')
-
-    def testCurrentContent( self ):
-        '''
-        Tests the CurrentContent function
-        '''
-        mockHead = self.mox.CreateMock( pygit2.Commit )
-        mockRepo = self.mox.CreateMock( pygit2.Repository )
-
-        mockCommit = TestObjectType( 'blobOid' )
-
-        mockHead.tree = self.mox.CreateMockAnything()
-
-        mockHead.tree[ 0 ].AndReturn( mockCommit )
-
-        mockBlob = TestBlobType( 'blobData' )
-
-        mockRepo[ 'blobOid' ].AndReturn( mockBlob )
-
-        self.mox.ReplayAll()
-
-        s = section.Section( 'name', mockHead, mockRepo )
-        c = s.CurrentContent()
-
-        self.mox.VerifyAll()
-        self.assertEqual( 'blobData', c )
-
-    def testSetContent( self ):
-        '''
-        Tests the SetContent function
-        '''
-        mockHead = self.mox.CreateMock( pygit2.Commit )
-        mockRepo = self.mox.CreateMock( pygit2.Repository )
-
-        section.CommitBlob(
-                mockRepo, 'content', 'name', 'Updating section',
-                [ mockHead ], 'refs/heads/sections/name'
-                ).AndReturn( 'newId' )
-
-        mockRepo[ 'newId' ].AndReturn( 'newCommit' )
-
-        self.mox.ReplayAll()
-
-        s = section.Section( 'name', mockHead, mockRepo )
-        s.SetContent( 'content' )
-
-        self.mox.VerifyAll()
-        self.assertEqual( s.headCommit, 'newCommit' )
 
     def testGetPosition( self ):
         '''
-        Tests the GetPosition function
+        Testing db.Section.GetPosition
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
@@ -75,7 +26,7 @@ class SectionTests(BaseTest):
         mockIndex.GetSectionPosition( 'sectionName' ).AndReturn( 100 )
         self.mox.ReplayAll()
 
-        s = section.Section( 'sectionName', 'commit', 'repo' )
+        s = section.Section( 'sectionName', 'repo' )
 
         self.assertEqual( 100, s.GetPosition() )
 
@@ -83,7 +34,7 @@ class SectionTests(BaseTest):
 
     def testSetPosition( self ):
         '''
-        Tests the SetPosition function
+        Testing db.Section.SetPosition
         '''
         self.mox.StubOutClassWithMocks( section, 'SectionIndex' )
         mockIndex = section.SectionIndex( 'repo' )
@@ -92,7 +43,7 @@ class SectionTests(BaseTest):
         mockIndex.Save( 'repo' )
         self.mox.ReplayAll()
 
-        s = section.Section( 'sectionName', 'commit', 'repo' )
+        s = section.Section( 'sectionName', 'repo' )
 
         s.SetPosition( 100 )
 
