@@ -461,15 +461,21 @@ class ResumrTests(TestCase):
                     ).AndReturn( markdownStr )
             expected.append(dict(name='%i' % i, content=markdownStr))
 
+        mockStylesheet = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( mockStylesheet )
+        mockStylesheet.CurrentContent().AndReturn('h3 {}')
+
         self.mox.ReplayAll()
         rv = self.client.get( '/render' )
         self.assert200( rv )
         self.assertTemplateUsed( 'render.html' )
         self.assertContext( 'sections', expected )
+        self.assertContext( 'stylesheet', 'h3 {}' )
 
         # Check that the output contains all the expected text
         for text in expected:
             self.assertIn( text['content'], rv.data )
+        self.assertIn( 'h3 {}', rv.data )
 
     def testRenderNotLoggedIn(self):
         self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )

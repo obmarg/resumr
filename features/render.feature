@@ -18,6 +18,6 @@ Feature: Render CV
             | name      | content       |
             | no1       | textify       |
             | no2       | sometext      |
-        And the style tag #stylesheet should contain "h3 {text-align:right;}"
+        And the style tag should contain "h3 {text-align:right;}"
         
     #TODO: Would be nice to test computed styles out here...

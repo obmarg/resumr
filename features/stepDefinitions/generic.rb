@@ -21,3 +21,9 @@ end
 Then /^I should see an (\w+) element containing "(.*?)"$/ do |elementType, text|
   page.should have_selector( elementType, :text => text )
 end
+
+Then /^the style tag should contain "(.*?)"$/ do |style|
+  sleep 0.5
+  newpage = Nokogiri::HTML.parse(page.source)
+  newpage.css("style").first.text.should include(style)
+end

@@ -305,7 +305,8 @@ def Render():
             ]
     return render_template(
             'render.html',
-            sections=sections
+            sections=sections,
+            stylesheet=d.GetStylesheet().CurrentContent()
             )
 
 
