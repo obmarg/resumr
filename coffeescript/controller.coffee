@@ -3,13 +3,15 @@ define(
     'models/section', 'models/stylesheet',
     'collections/sectionList', 'views/sectionListView', 'views/sectionItemView',
     'views/sectionEditor', 'collections/sectionHistory',
-    'views/sectionHistoryView', 'views/stylesheetEditor', 'views/editorTitlebar'
+    'views/sectionHistoryView', 'views/stylesheetEditor', 'views/editorTitlebar',
+    'utils/styler'
   ],
   ( SectionOverviewLayout, EditorLayout
     Section, Stylesheet,
     SectionList, SectionListView, SectionItemView,
     SectionEditor, SectionHistory,
-    SectionHistoryView, StylesheetEditor, EditorTitlebar
+    SectionHistoryView, StylesheetEditor, EditorTitlebar,
+    Styler
   ) ->
     class Controller
       constructor: (@page, @vent) ->
@@ -88,8 +90,13 @@ define(
           layout = new EditorLayout()
           @page.show( layout )
 
+          previewStyler = new Styler(
+            'stylesheetEditorPreviewCss', '#editorRightPane'
+          )
+
           editor = new StylesheetEditor( model: @stylesheet )
           layout.left.show( editor )
+          editor.bindTo( editor, 'change', previewStyler.update, previewStyler )
           editor.createEditor()
           preview = new SectionListView(
             collection: @sectionList

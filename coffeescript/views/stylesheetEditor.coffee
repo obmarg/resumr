@@ -5,7 +5,6 @@ define(
       template: '#stylesheet-editor-template'
 
       updateTimeout: 500
-      cssRegexp: /(\}?)\s*(.*?)\{/gm
 
       events:
         'change #stylesheetEditor': 'onBaseChange'
@@ -42,19 +41,8 @@ define(
           , @updateTimeout
         )
 
-      getPreviewCss: ->
-        # Function called to get the css used for previews
-        css = @codeMirror.getValue()
-        css.replace(@cssRegexp, '$1\n\n#editorRightPane $2{')
-
       updatePreview: ->
-        css = $( '#stylesheetEditorPreviewCss' )
-        if css.size() == 0
-          $( 'head' ).append(
-            "<style id='stylesheetEditorPreviewCss'></style>"
-          )
-        elem = css[0]
-        css.text( @getPreviewCss() )
+        @trigger( 'change', @codeMirror.getValue() )
 
       doSave: ->
         @model.save( content: @codeMirror.getValue(),
