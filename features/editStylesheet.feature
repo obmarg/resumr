@@ -58,12 +58,6 @@ Feature: Edit Stylesheet
         When I click on #stylesheetLink
         Then I should see "h3 { .opaque; }" in #editor
 
-    Scenario: Validation failure
-        Given I am on the stylesheet page
-        And I enter "h3 { " in the stylesheet editor
-        When I click on #saveButton
-        Then I should see an error "invalid css" 
-
     Scenario: Submit then view index
         Given I am on the stylesheet page
         And I enter "h3 { text-align: right; }" in the stylesheet editor
