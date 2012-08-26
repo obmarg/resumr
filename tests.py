@@ -452,13 +452,14 @@ class ResumrTests(TestCase):
 
         expected = []
         for i, s in sections:
+            s.name = '%i' % i
             contentStr = 'content' + str(i)
             markdownStr = 'markdown' + str(i)
             s.CurrentContent().AndReturn( contentStr )
             resumr.markdown.markdown(
                     contentStr
                     ).AndReturn( markdownStr )
-            expected.append( markdownStr )
+            expected.append(dict(name='%i' % i, content=markdownStr))
 
         self.mox.ReplayAll()
         rv = self.client.get( '/render' )
@@ -468,7 +469,7 @@ class ResumrTests(TestCase):
 
         # Check that the output contains all the expected text
         for text in expected:
-            self.assertIn( text, rv.data )
+            self.assertIn( text['content'], rv.data )
 
     def testRenderNotLoggedIn(self):
         self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
@@ -701,35 +702,6 @@ class ResumrTests(TestCase):
         doc.GetStylesheet().AndReturn( style )
 
         inputStruct = { 'somethingElse': 'xyzz' }
-        inputStr = json.dumps( inputStruct )
-        inputStream = StringIO( inputStr )
-
-        self.mox.ReplayAll()
-        rv = self.client.put(
-                '/api/stylesheet',
-                input_stream=inputStream,
-                content_type='application/json',
-                content_length=len(inputStr)
-                )
-        self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
-
-    def testSetStylesheetInvalidContent(self):
-        '''
-        Testing the set stylesheet content API w/ invalid content
-        '''
-        self.mox.StubOutWithMock( resumr, 'GetDoc' )
-        doc = self.mox.CreateMock( Document )
-        resumr.GetDoc().AndReturn( doc )
-
-        style = self.mox.CreateMock( Stylesheet )
-        doc.GetStylesheet().AndReturn( style )
-
-        inputStruct = {
-                'content': '''
-                </script><script type="text/javascript">
-                alert("FUUUCK");</script>
-                ''' }
         inputStr = json.dumps( inputStruct )
         inputStream = StringIO( inputStr )
 

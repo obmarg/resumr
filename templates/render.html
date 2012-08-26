@@ -28,7 +28,12 @@
 </head>
 <body>
 	<div id='container-fluid'>
-		{% for s in sections %}<div class='row-fluid'><div class='span2'></div><div class='span10'>{{ s|safe }}</div></div>{% endfor %}
+		{% for s in sections %}
+		<div class='row-fluid'>
+			<div class='span2'></div>
+			<div id='section-{{ s.name }}' class='span10 listItem'>{{ s.content|safe }}</div>
+		</div>
+		{% endfor %}
 	</div>
 </body>
 </html>

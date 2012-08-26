@@ -299,8 +299,10 @@ def Render():
     if not IsLoggedIn():
         return redirect( url_for( 'Login' ) )
     d = GetDoc()
-    sections = [ s for i, s in d.CurrentSections() ]
-    sections = [ markdown.markdown( s.CurrentContent() ) for s in sections ]
+    sections = [
+            dict(name=s.name, content=markdown.markdown(s.CurrentContent()))
+            for i, s in d.CurrentSections()
+            ]
     return render_template(
             'render.html',
             sections=sections

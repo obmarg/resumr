@@ -46,4 +46,6 @@ Then /^I should be on the edit section page for (\w+)$/ do |sectionName|
   current_path_info().should == "/#section/#{sectionName}/edit"
 end
 
-
+Then /^I should be on the render page$/ do
+  current_path_info().should == "/render"
+end
