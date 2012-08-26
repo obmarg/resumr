@@ -27,6 +27,10 @@ define(
         # Usually we wouldn't care about this, but it's
         # needed for some tests
         @codeMirror.setValue( $( '#stylesheetEditor' ).val() )
+        
+        # Since this is just used for tests, skip the usual wait time,
+        # and update the preview directly
+        @updatePreview()
 
       onChange: ->
         # Called by code mirror when the contents change
@@ -40,7 +44,7 @@ define(
       getPreviewCss: ->
         # Function called to get the css used for previews
         css = @codeMirror.getValue()
-        css.replace(@cssRegexp, '$1\n\n#editorRightPane $2 {')
+        css.replace(@cssRegexp, '$1\n\n#editorRightPane $2{')
 
       updatePreview: ->
         css = $( '#stylesheetEditorPreviewCss' )

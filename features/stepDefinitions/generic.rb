@@ -14,7 +14,7 @@ When /^I click on (.*?)$/ do |element|
   find( element ).click
 end
 
-Then /^I should see "?(.*?)"? in ([-#\._\w]*?)$/ do |text, field|
+Then /^I should see "?(.*?)"? in ([#\.][-_\w]*?)$/ do |text, field|
   find( field ).should have_content(text)
 end
 

@@ -17,8 +17,8 @@ Feature: Edit Stylesheet
 
     Scenario: Live preview
         Given I am on the stylesheet page
-        When I enter "h3 { text-align: right; }" in the stylesheet editor
-        Then I should see "textify" right aligned in #stylesheetPreview
+        When I enter "h3 { text-align:right; }" in the stylesheet editor
+        Then the style tag should contain "#editorRightPane h3 { text-align:right; }"
 
     Scenario: Cancel editing
         Given I am on the stylesheet page
