@@ -7,7 +7,7 @@ Feature: Add New Section
         Given I am on the main page
         When I click on #newSectionLink
         Then I should be on the new section page
-        And I should see "" in #sectionName
+        And I should see "" in #nameField
         And I should see "" in #wmd-input
         And I should see an empty preview
 
@@ -47,16 +47,16 @@ Feature: Add New Section
 
     Scenario: Clear form
         Given I am on the new section page
-        And I have entered "Hello" in #sectionName
+        And I have entered "Hello" in #nameField
         And I have entered "Some content" in #wmd-input
         When I click on #cancelButton
-        Then I should see "" in #sectionName
+        Then I should see "" in #nameField
         And I should see "" in #wmd-input
         And I should see an empty preview
 
     Scenario: Submit form
         Given I am on the new section page
-        And I have entered "Hello" in #sectionName
+        And I have entered "Hello" in #nameField
         And I have entered "Some content" in #wmd-input
         When I click on #saveButton
         Then I should be on the edit section page for Hello
@@ -64,7 +64,7 @@ Feature: Add New Section
 
      Scenario Outline: Validation failures
         Given I am on the new section page
-        And I have entered <name> in #sectionName
+        And I have entered <name> in #nameField
         And I have entered <content> in #wmd-input
         When I click on #saveButton
         Then I should be on the new section page
@@ -79,7 +79,7 @@ Feature: Add New Section
 
     Scenario: Submit first section then view index
         Given I am on the new section page
-        And I have entered "Hello" in #sectionName
+        And I have entered "Hello" in #nameField
         And I have entered "Some content" in #wmd-input
         When I click on #saveButton
         And I view the main page
@@ -93,7 +93,7 @@ Feature: Add New Section
             | no1       | textify       | 
             | no2       | some text     |
         And I am on the new section page
-        And I have entered "Hello" in #sectionName
+        And I have entered "Hello" in #nameField
         And I have entered "Some content" in #wmd-input
         When I click on #saveButton
         And I view the main page

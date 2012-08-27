@@ -4,7 +4,6 @@ define(
     class SectionItemView extends Backbone.Marionette.ItemView
       template: '#section-item-template'
 
-
       events:
         'click .icon-remove' : 'onClickDelete'
         'click .icon-edit' : 'onClickEdit'
@@ -24,7 +23,6 @@ define(
         content: @converter.makeHtml( @model.get( 'content' ) )
         showTools: @options.showTools
         divClass: if @options.showTools then 'section' else 'listItem'
-        styleParentClass: if @options.showTools then 'styleParent' else ''
         
       onClickDelete: ->
         @model.destroy()

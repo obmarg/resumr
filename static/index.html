@@ -85,47 +85,19 @@
 	</div>
 </script>
 <script id='section-editor-template' type='text/template'>
-	<div id='row-fluid'>
-		<h3 class='span12'>
-			<% if ( isNew ) { %>
-				New Section &nbsp; 
-				<input 
-					class='no-margin' 
-					type='text' 
-					id='sectionName' 
-					placeholder='Section Name' 
-					tabindex='1'/> &nbsp;
-			<% } else { %>
-				Editing Section "<%= item.name %>" &nbsp;
-			<% } %>
-			<button id='saveButton' class='btn btn-primary' tabindex='3'>
-				<i class='icon-ok-sign icon-white'></i> Save
-			</button>
-			<button id='cancelButton' class='btn btn-danger' tabindex='4'>
-				Cancel
-			</button>
-		</h3>
+	<div id='editor'>
+		<div id='wmd-button-bar'></div>
+		<textarea 
+			id='wmd-input' 
+			class='span6' 
+			autofocus='autofocus'
+			tabindex='2'><%= item.content %></textarea>
 	</div>
-	<div id='row-fluid'>
-		<div class='span12 center-align'>
-			<span id='editorError' class='transparent'>
-				Placeholder text
-			</span>
-		</div>
-	</div>
-	<div id='row-fluid'>
-		<div id='editor' class='span6'>
-			<div id='wmd-button-bar'></div>
-			<textarea 
-				id='wmd-input' 
-				class='span6' 
-				tabindex='2'><%= item.content %></textarea>
-		</div>
-		<div id='preview' class='span6 styleParent'>
-			<div class='wmd-button-row'>&nbsp;</div>
-			<div id='wmd-preview'>
-			</div>
-		</div>
+</script>
+<script id='section-editor-preview-template' type='text/template'>
+	<div id='preview' class='styleParent'>
+		<div class='wmd-button-row'>&nbsp;</div>
+		<div id='wmd-preview'></div>
 	</div>
 </script>
 <script id='section-item-template' type='text/template'>
@@ -157,20 +129,21 @@
 		<textarea 
 			id='stylesheetEditor' 
 			class='span6' 
+			autofocus='autofocus'
 			tabindex='2'></textarea>
 	</div>
 </script>
 <script id='editor-layout-template' type='text/template'>
-	<div id='editorTitlebar' id='row-fluid'>
+	<div id='editorTitlebar' class='row-fluid'>
 	</div>
-	<div id='row-fluid'>
+	<div class='row-fluid'>
 		<div class='span12 center-align'>
 			<span id='editorError' class='transparent'>
 				Placeholder text
 			</span>
 		</div>
 	</div>
-	<div id='row-fluid'>
+	<div class='row-fluid'>
 		<div id='editorLeftPane' class='span6'>
 			&nbsp;
 		</div>
@@ -180,25 +153,24 @@
 	</div>
 </script>
 <script id='editor-titlebar-template' type='text/template'>
-	<div id='row-fluid'>
-		<h3 class='span12'>
-			<%= title %> &nbsp; 
-			<% if ( isNew ) { %>
-				<input 
-					class='no-margin' 
-					type='text' 
-					id='nameField' 
-					placeholder='<%= namePlaceholder %>' 
-					tabindex='1'/> &nbsp;
-			<% } %>
-			<button id='saveButton' class='btn btn-primary' tabindex='3'>
-				<i class='icon-ok-sign icon-white'></i> Save
-			</button>
-			<button id='cancelButton' class='btn btn-danger' tabindex='4'>
-				Cancel
-			</button>
-		</h3>
-	</div>
+	<h3 class='span12'>
+		<%= title %> &nbsp; 
+		<% if ( isNew ) { %>
+			<input 
+				class='no-margin' 
+				type='text' 
+				id='nameField' 
+				placeholder='<%= namePlaceholder %>' 
+				autofocus='autofocus'
+				tabindex='1'/> &nbsp;
+		<% } %>
+		<button id='saveButton' class='btn btn-primary' tabindex='3'>
+			<i class='icon-ok-sign icon-white'></i> Save
+		</button>
+		<button id='cancelButton' class='btn btn-danger' tabindex='4'>
+			Cancel
+		</button>
+	</h3>
 </script>
 </body>
 </html>
