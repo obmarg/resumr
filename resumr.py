@@ -2,6 +2,7 @@ import json
 import markdown
 import shutil
 import sys
+import re
 from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
 from db import Document, ContentNotFound, RepoNotFound
@@ -55,6 +56,8 @@ class ResumrApp(Flask):
 
 
 app = ResumrApp()
+
+SECTION_NAME_REGEXP = re.compile(r'^\w+$')
 
 
 def IsLoggedIn():
@@ -143,11 +146,19 @@ def AddSection():
     '''
     d = GetDoc()
     data = request.json
-    # TODO: Add some validation of the input (either here or in Document)
     try:
         name = data[ 'newName' ]
     except KeyError:
-        name = data[ 'name' ]
+        # We check data['name'] for the sake of component tests.
+        # The javascript clientside should send via newName,
+        # as otherwise it mistakes the new section for an existing
+        # one, and attempts to PUT
+        try:
+            name = data[ 'name' ]
+        except KeyError:
+            abort(500)
+    if not SECTION_NAME_REGEXP.match(name):
+        abort(500)
     s = d.AddSection( name, data[ 'content' ] )
     return json.dumps( {
         'name' : s.name,

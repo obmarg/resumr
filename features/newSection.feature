@@ -56,11 +56,11 @@ Feature: Add New Section
 
     Scenario: Submit form
         Given I am on the new section page
-        And I have entered "Hello" in #nameField
+        And I have entered "Hello_There" in #nameField
         And I have entered "Some content" in #wmd-input
         When I click on #saveButton
-        Then I should be on the edit section page for Hello
-        And I should see the edit section "Hello" title
+        Then I should be on the edit section page for Hello_There
+        And I should see the edit section "Hello_There" title
 
      Scenario Outline: Validation failures
         Given I am on the new section page
@@ -76,6 +76,8 @@ Feature: Add New Section
             |       |           | Sections can't be saved without a name    |
             | woo   |           | Fill in some content before saving        |
             |       | something | Sections can't be saved without a name    |
+            | name% | something | Names must not have spaces or punctuation |
+            | a b   | something | Names must not have spaces or punctuation |
 
     Scenario: Submit first section then view index
         Given I am on the new section page

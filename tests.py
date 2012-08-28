@@ -39,6 +39,14 @@ class ResumrTests(TestCase):
         self.assertTrue(response.status_code in (301, 302, 303))
         self.assertEqual(response.location, "http://localhost:5000" + location)
 
+    def assert500(self, response):
+        '''
+        Checks if the response is a 500 error
+
+        :param response:    Flask response
+        '''
+        self.assertEqual(response.status_code, 500)
+
     def testIsLoggedIn(self):
         with resumr.app.test_request_context('/'):
             resumr.app.preprocess_request()
@@ -234,6 +242,37 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.assert200( rv )
         self.assertEqual( expected, rv.json )
+
+    def doAddSectionFailTest(self, **inputStruct):
+        ''' Utility function called by the add section fail test'''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        self.mox.ReplayAll()
+
+        rv = self.client.post(
+                '/api/sections',
+                data=json.dumps(inputStruct),
+                content_type='application/json'
+                )
+        self.assert500(rv)
+
+    def testAddSectionEmptyName(self):
+        ''' Testing adding a section with an empty name '''
+        self.doAddSectionFailTest(newName='', content='woot')
+
+    def testAddSectionNoName(self):
+        ''' Testing adding a section with no name '''
+        self.doAddSectionFailTest(content='woot')
+
+    def testAddSectionNameWithSpaces(self):
+        ''' Testing adding a section with a name with spaces '''
+        self.doAddSectionFailTest(newName='some thing', content='woot')
+
+    def testAddSectionNameWithNonWordChars(self):
+        ''' Testing adding a section with non-word chars '''
+        self.doAddSectionFailTest(newName='some&', content='woot')
 
     def testUpdateSection(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
