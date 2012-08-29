@@ -29,6 +29,7 @@ Then /^I should see the edit section "(.*?)" title$/ do |sectionName|
 end
 
 Then /^I should see an error (.*?)$/ do |errorText|
+  sleep 0.2
   page.should have_selector( "#editorError.opaque", :text => errorText )
 end
 

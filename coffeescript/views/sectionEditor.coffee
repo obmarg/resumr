@@ -37,8 +37,11 @@ define(
           success: =>
             @trigger( 'saved', @model )
           error: (model, response) =>
+            # TODO: This doesn't seem to handle server errors as well 
+            #       as it should.  Especially since it doens't seem
+            #       to revert the model to it's previous state...
+            
             # Display the error to the user
-            # TODO: This doesn't seem to handle server errors as well as it should
             @trigger('error', response)
         )
 

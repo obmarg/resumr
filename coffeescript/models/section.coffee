@@ -7,6 +7,7 @@ define [ ], ( ) ->
     idAttribute: 'name'
 
     nameRegexp: /^\w+$/
+    invalidContentRegexp: /<[^>]*>/
 
     validate: ( attrs ) ->
       if @isNew()
@@ -24,6 +25,11 @@ define [ ], ( ) ->
         return {
           field: 'content'
           text: 'Fill in some content before saving'
+        }
+      else if attrs.content.match(@invalidContentRegexp)
+        return {
+          field: 'content'
+          text: 'Content must not contain HTML tags'
         }
       return
   

@@ -78,6 +78,8 @@ Feature: Add New Section
             |       | something | Sections can't be saved without a name    |
             | name% | something | Names must not have spaces or punctuation |
             | a b   | something | Names must not have spaces or punctuation |
+            | woo   | <a href=> | Content must not contain HTML tags        |
+            | woo   | <br/>     | Content must not contain HTML tags        |
 
     Scenario: Submit first section then view index
         Given I am on the new section page

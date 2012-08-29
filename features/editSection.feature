@@ -72,16 +72,22 @@ Feature: Edit Existing Section
         Then I should be on the edit section page for no1
         And I should see the edit section "no1" title
 
-    Scenario: Attempt to submit empty text
+     Scenario Outline: Validation failures
         Given the following sections:
             | name      | content       | 
             | no1       | textify       | 
         And I am on the edit section page for no1
-        And I have entered "" in #wmd-input
+        And I have entered <content> in #wmd-input
         When I click on #saveButton
         Then I should be on the edit section page for no1
-        And I should see an error Fill in some content before saving 
+        And I should see an error <warn>
         And The error should disappear
+
+        Examples:
+            | content   | warn                                      |
+            |           | Fill in some content before saving        |
+            | <a href=> | Content must not contain HTML tags        |
+            | <br/>     | Content must not contain HTML tags        |
 
     Scenario: Submit form then view index
         Given the following sections:
