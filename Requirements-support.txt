@@ -4,3 +4,4 @@ nose
 fabric
 coverage
 pylint
+ddt

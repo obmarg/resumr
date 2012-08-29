@@ -24,6 +24,9 @@ class ResumrTests(TestCase):
 
     def setUp(self):
         self.mox = mox.Mox()
+        self.mox.StubOutWithMock(resumr, 'ValidateMarkdown')
+        self.mox.StubOutWithMock(resumr.markdown, 'markdown')
+        self.mox.StubOutWithMock(resumr, 'CleanMarkdownOutput')
 
     def tearDown(self):
         self.mox.UnsetStubs()
@@ -225,6 +228,7 @@ class ResumrTests(TestCase):
         inputStream = StringIO( inputStr )
 
         s = self.mox.CreateMock( Section )
+        resumr.ValidateMarkdown( 'woot' )
         doc.AddSection( 'alfred', 'woot' ).AndReturn( s )
         s.name = 'jones'
         s.GetPosition().AndReturn( 100 )
@@ -243,11 +247,16 @@ class ResumrTests(TestCase):
         self.assert200( rv )
         self.assertEqual( expected, rv.json )
 
-    def doAddSectionFailTest(self, **inputStruct):
-        ''' Utility function called by the add section fail test'''
+    def doAddSectionFailTest(self, markdownFail=False, **inputStruct):
+        ''' Utility function called by the add section fail tests '''
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
         resumr.GetDoc().AndReturn( doc )
+
+        if markdownFail:
+            resumr.ValidateMarkdown(
+                    inputStruct['content']
+                    ).AndRaise( resumr.MarkdownValidationError )
 
         self.mox.ReplayAll()
 
@@ -274,6 +283,16 @@ class ResumrTests(TestCase):
         ''' Testing adding a section with non-word chars '''
         self.doAddSectionFailTest(newName='some&', content='woot')
 
+    def testAddSectionNoContent(self):
+        ''' Testing adding a section with no content '''
+        self.doAddSectionFailTest(newName='some')
+
+    def testAddSectionRejectedMarkdown(self):
+        ''' Testing adding a section with rejected markdown '''
+        self.doAddSectionFailTest(
+                markdownFail=True, newName='some', content='x'
+                )
+
     def testUpdateSection(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
         doc = self.mox.CreateMock( Document )
@@ -286,6 +305,7 @@ class ResumrTests(TestCase):
         s = self.mox.CreateMock( Section )
         doc.FindSection( 'alfred' ).AndReturn( s )
         s.CurrentContent().AndReturn( 'notthesame' )
+        resumr.ValidateMarkdown('woot' )
         s.SetContent( 'woot' )
         s.GetPosition().AndReturn( 100 )
         s.SetPosition( 500 )
@@ -359,6 +379,7 @@ class ResumrTests(TestCase):
         s = self.mox.CreateMock( Section )
         doc.FindSection( 'alfred' ).AndReturn( s )
         s.CurrentContent().AndReturn( 'notthesame' )
+        resumr.ValidateMarkdown( 'woot' )
         s.SetContent( 'woot' )
         s.GetPosition().AndReturn( 500 )
 
@@ -371,6 +392,30 @@ class ResumrTests(TestCase):
                 )
         self.mox.VerifyAll()
         self.assert200( rv )
+
+    def testUpdateSectionContentValidateFail(self):
+        ''' Testing validation failures when updating a section '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        inputStruct = { 'pos': 500, 'content': 'woot' }
+
+        s = self.mox.CreateMock( Section )
+        doc.FindSection( 'alfred' ).AndReturn( s )
+        s.CurrentContent().AndReturn( 'notthesame' )
+        resumr.ValidateMarkdown(
+                'woot'
+                ).AndRaise( resumr.MarkdownValidationError )
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/sections/alfred',
+                data=json.dumps(inputStruct),
+                content_type='application/json',
+                )
+        self.mox.VerifyAll()
+        self.assert500( rv )
 
     def testRemoveSection(self):
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
@@ -476,7 +521,6 @@ class ResumrTests(TestCase):
 
     def testRender(self):
         self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
-        self.mox.StubOutWithMock( resumr.markdown, 'markdown' )
         self.mox.StubOutWithMock( resumr, 'GetDoc' )
 
         resumr.IsLoggedIn().AndReturn( True )
@@ -493,12 +537,19 @@ class ResumrTests(TestCase):
         for i, s in sections:
             s.name = '%i' % i
             contentStr = 'content' + str(i)
+            s.CurrentContent().AndReturn(contentStr)
+
+        for i, s in sections:
+            contentStr = 'content' + str(i)
             markdownStr = 'markdown' + str(i)
-            s.CurrentContent().AndReturn( contentStr )
+            cleanStr = 'clean' + str(i)
             resumr.markdown.markdown(
                     contentStr
                     ).AndReturn( markdownStr )
-            expected.append(dict(name='%i' % i, content=markdownStr))
+            resumr.CleanMarkdownOutput(
+                    markdownStr
+                    ).AndReturn(cleanStr)
+            expected.append(dict(name='%i' % i, content=cleanStr))
 
         mockStylesheet = self.mox.CreateMock( Stylesheet )
         doc.GetStylesheet().AndReturn( mockStylesheet )

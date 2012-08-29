@@ -7,6 +7,8 @@ from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
 from db import Document, ContentNotFound, RepoNotFound
 from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
+from utils.markdownutils import ValidateMarkdown, MarkdownValidationError
+from utils.markdownutils import CleanMarkdownOutput
 
 SYSTEMTEST_PORT = 43001
 
@@ -147,24 +149,28 @@ def AddSection():
     d = GetDoc()
     data = request.json
     try:
-        name = data[ 'newName' ]
-    except KeyError:
-        # We check data['name'] for the sake of component tests.
-        # The javascript clientside should send via newName,
-        # as otherwise it mistakes the new section for an existing
-        # one, and attempts to PUT
         try:
-            name = data[ 'name' ]
+            name = data[ 'newName' ]
         except KeyError:
+            # We check data['name'] for the sake of component tests.
+            # The javascript clientside should send via newName,
+            # as otherwise it mistakes the new section for an existing
+            # one, and attempts to PUT
+                name = data[ 'name' ]
+        if not SECTION_NAME_REGEXP.match(name):
             abort(500)
-    if not SECTION_NAME_REGEXP.match(name):
+        content = data['content']
+        ValidateMarkdown(content)
+        s = d.AddSection(name, content)
+        return json.dumps({
+            'name': s.name,
+            'content': content,
+            'pos': s.GetPosition()
+            })
+    except KeyError:
         abort(500)
-    s = d.AddSection( name, data[ 'content' ] )
-    return json.dumps( {
-        'name' : s.name,
-        'content' : data[ 'content' ],
-        'pos' : s.GetPosition()
-        } )
+    except MarkdownValidationError:
+        abort(500)
 
 
 @app.route('/api/sections/<name>', methods=['PUT'])
@@ -178,12 +184,16 @@ def UpdateSection(name):
     d = GetDoc()
     try:
         section = d.FindSection( name )
-        if section.CurrentContent() != request.json[ 'content' ]:
-            section.SetContent( request.json[ 'content' ] )
+        content = request.json[ 'content' ]
+        if section.CurrentContent() != content:
+            ValidateMarkdown(content)
+            section.SetContent(content)
         if section.GetPosition() != request.json[ 'pos' ]:
             section.SetPosition( request.json[ 'pos' ] )
     except ContentNotFound:
         abort(404)
+    except MarkdownValidationError:
+        abort(500)
     return "OK"
 
 
@@ -310,13 +320,16 @@ def Render():
     if not IsLoggedIn():
         return redirect( url_for( 'Login' ) )
     d = GetDoc()
-    sections = [
-            dict(name=s.name, content=markdown.markdown(s.CurrentContent()))
-            for i, s in d.CurrentSections()
+    Convert = lambda x: CleanMarkdownOutput(markdown.markdown(x))
+    sections = [(s.name, s.CurrentContent()) for i, s in d.CurrentSections()]
+    output = [
+            dict(name=name, content=Convert(content))
+            for name, content in sections
             ]
+
     return render_template(
             'render.html',
-            sections=sections,
+            sections=output,
             stylesheet=d.GetStylesheet().CurrentContent()
             )
 
