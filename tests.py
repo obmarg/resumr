@@ -8,7 +8,7 @@ from db import Section, Document, ContentNotFound, RepoNotFound, Stylesheet
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
-from flaskext.testing import TestCase
+from flask.ext.testing import TestCase
 from flask import session
 
 

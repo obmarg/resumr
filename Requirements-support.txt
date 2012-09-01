@@ -1,5 +1,5 @@
 mox
-flask-testing
+flask-testing>=0.4
 nose
 fabric
 coverage
