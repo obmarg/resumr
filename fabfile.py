@@ -7,6 +7,14 @@ env.hosts = [ 'plug.grambo.me.uk' ]
 env.user = 'resumr'
 
 
+def ut():
+    # Runs unit tests
+    local(  "nosetests -i "
+            "'^(it|ensure|must|should|specs?|examples?|deve|tests?)' "
+            "--with-spec --spec-color"
+            )
+
+
 def coffeescript():
     local( 'coffee -o static/js -c coffeescript' )
 
