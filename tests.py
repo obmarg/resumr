@@ -4,7 +4,7 @@ import json
 import unittest
 import mox
 from StringIO import StringIO
-from db import Section, Document, ContentNotFound, RepoNotFound, Stylesheet
+from db import Section, Document, ContentNotFound, Stylesheet
 from services import OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
@@ -49,90 +49,6 @@ class ResumrTests(TestCase):
         :param response:    Flask response
         '''
         self.assertEqual(response.status_code, 500)
-
-    def testIsLoggedIn(self):
-        with resumr.app.test_request_context('/'):
-            resumr.app.preprocess_request()
-            session.new = False
-            session[ 'email' ] = 'something'
-            assert resumr.IsLoggedIn()
-
-    def testNotLoggedIn(self):
-        with resumr.app.test_request_context('/'):
-            resumr.app.preprocess_request()
-            assert not resumr.IsLoggedIn()
-
-    def testGetDocLoggedIn(self):
-        self.mox.StubOutClassWithMocks(resumr, 'Document')
-        d = resumr.Document( 'facebook - something', rootPath=None )
-
-        self.mox.ReplayAll()
-        with resumr.app.test_request_context('/'):
-            resumr.app.preprocess_request()
-            session.new = False
-            session[ 'email' ] = 'something'
-            session[ 'regType' ] = 'facebook'
-            self.assertIs( resumr.GetDoc(), d )
-        self.mox.VerifyAll()
-
-    def testGetDocWithRootPath(self):
-        self.mox.StubOutClassWithMocks(resumr, 'Document')
-        d = resumr.Document( 'facebook - something', rootPath='somewhere' )
-
-        self.mox.ReplayAll()
-        try:
-            resumr.app.config[ 'DATA_PATH' ] = 'somewhere'
-            with resumr.app.test_request_context('/'):
-                resumr.app.preprocess_request()
-                session.new = False
-                session[ 'email' ] = 'something'
-                session[ 'regType' ] = 'facebook'
-                self.assertIs( resumr.GetDoc(), d )
-            self.mox.VerifyAll()
-        finally:
-            resumr.app.config[ 'DATA_PATH' ] = None
-
-    def testGetDocNotLoggedIn(self):
-        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
-        self.mox.StubOutWithMock(resumr, 'abort')
-        resumr.IsLoggedIn().AndReturn( False )
-        resumr.abort( 401 ).AndRaise( Exception )
-
-        self.mox.ReplayAll()
-        with self.assertRaises( Exception ):
-            resumr.GetDoc()
-        self.mox.VerifyAll()
-
-    def testGetDocMissingKeys(self):
-        self.mox.StubOutWithMock(resumr, 'IsLoggedIn')
-        self.mox.StubOutWithMock(resumr, 'abort')
-        resumr.IsLoggedIn().AndReturn( True )
-        resumr.abort( 401 ).AndRaise( Exception )
-
-        self.mox.ReplayAll()
-        with resumr.app.test_request_context('/'):
-            resumr.app.preprocess_request()
-            with self.assertRaises( Exception ):
-                resumr.GetDoc()
-        self.mox.VerifyAll()
-
-    def testGetDocCreateRequired(self):
-        self.mox.StubOutWithMock(resumr, 'Document' )
-        resumr.Document(
-                'facebook - something', rootPath=None
-                ).AndRaise( RepoNotFound )
-        resumr.Document(
-                'facebook - something', create=True, rootPath=None
-                ).AndReturn( 'document')
-
-        self.mox.ReplayAll()
-        with resumr.app.test_request_context('/'):
-            resumr.app.preprocess_request()
-            session.new = False
-            session[ 'email' ] = 'something'
-            session[ 'regType' ] = 'facebook'
-            self.assertEqual( resumr.GetDoc(), 'document' )
-        self.mox.VerifyAll()
 
     def testIndex(self):
         self.mox.StubOutWithMock(resumr, 'IsLoggedIn')

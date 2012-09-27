@@ -5,10 +5,12 @@ import sys
 import re
 from flask import Flask, render_template, abort, request, session
 from flask import redirect, url_for
-from db import Document, ContentNotFound, RepoNotFound
+from db import ContentNotFound
 from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 from utils.markdownutils import ValidateMarkdown, MarkdownValidationError
 from utils.markdownutils import CleanMarkdownOutput
+import utils.viewutils
+from utils.viewutils import IsLoggedIn, GetDoc
 
 SYSTEMTEST_PORT = 43001
 
@@ -35,6 +37,8 @@ class ResumrApp(Flask):
 
         self.config.from_object(DefaultConfig)
         self.config.from_envvar('RESUMR_CONFIG', silent=True)
+        utils.viewutils.SetConfig(self.config)
+
         # Set up the services
         oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
         for name in SERVICES_AVALIABLE:
@@ -61,41 +65,6 @@ class ResumrApp(Flask):
 app = ResumrApp()
 
 SECTION_NAME_REGEXP = re.compile(r'^\w+$')
-
-
-def IsLoggedIn():
-    '''
-    Function that checks if we're logged in
-
-    Returns:
-        True if we are, False otherwise
-    '''
-    if app.config[ 'BYPASS_LOGIN' ]:
-        return True
-    if session.new or 'email' not in session:
-        return False
-    return True
-
-
-def GetDoc():
-    if not IsLoggedIn():
-        abort( 401 )
-    if app.config[ 'BYPASS_LOGIN' ]:
-        docName = app.config[ 'BYPASS_REPO_NAME' ]
-    else:
-        try:
-            docName = '{0} - {1}'.format(
-                    session[ 'regType' ], session[ 'email' ]
-                    )
-        except KeyError:
-            # Seems like we're not logged in after all :(
-            abort( 401 )
-    try:
-        return Document( docName, rootPath=app.config[ 'DATA_PATH' ] )
-    except RepoNotFound:
-        return Document(
-                docName, create=True, rootPath=app.config[ 'DATA_PATH' ]
-                )
 
 
 @app.route("/")
