@@ -6,3 +6,4 @@ coverage
 pylint
 ddt
 pinocchio
+flask-should-dsl
