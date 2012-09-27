@@ -3,11 +3,7 @@ import resumr
 import unittest
 import mox
 from db import Section, Document, Stylesheet
-from services import OAuthException
-from services.auth import BaseOAuth2
-from services.facebook import FacebookService
 from flask.ext.testing import TestCase
-from flask import session
 
 
 class ResumrTests(TestCase):
@@ -120,84 +116,6 @@ class ResumrTests(TestCase):
         rv = self.client.get( '/render' )
         self.mox.VerifyAll()
         self.assertRedirects( rv, '/login' )
-
-    def testLogin(self):
-        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
-        resumr.IsLoggedIn().AndReturn( False )
-        self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
-        self.mox.VerifyAll()
-        self.assert200( rv )
-        self.assertTemplateUsed( 'login.html' )
-
-    def testLoginAlready(self):
-        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
-        resumr.IsLoggedIn().AndReturn( True )
-        self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
-        self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
-
-    def testOAuthCallback(self):
-        self.mox.StubOutWithMock( resumr, 'GetAuthService' )
-        authService = self.mox.CreateMock( BaseOAuth2 )
-        service = self.mox.CreateMock( FacebookService )
-
-        resumr.GetAuthService( 'facebook' ).AndReturn( authService )
-        authService.ProcessAuthResponse( 'auth_code' ).AndReturn( service )
-        service.GetUserEmail().AndReturn( 'someone@somewhere' )
-
-        self.mox.ReplayAll()
-        with self.client as client:
-            rv = client.get(
-                    '/login/auth/facebook',
-                    query_string={ 'code': 'auth_code' }
-                    )
-            self.assertEqual( 'someone@somewhere', session[ 'email' ] )
-        self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
-
-    def testOAuthError(self):
-        self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'error': 'e' }
-                )
-        self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
-
-    def testOAuthException(self):
-        self.mox.StubOutWithMock( resumr, 'GetAuthService' )
-        authService = self.mox.CreateMock( BaseOAuth2 )
-        self.mox.CreateMock( FacebookService )
-
-        resumr.GetAuthService( 'facebook' ).AndReturn( authService )
-        authService.ProcessAuthResponse( 'auth_code' ).AndRaise(
-                OAuthException
-                )
-
-        self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'code': 'auth_code' }
-                )
-        self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
-
-    def testOAuthNoCodeParam(self):
-        self.mox.StubOutWithMock( resumr, 'GetAuthService' )
-        authService = self.mox.CreateMock( BaseOAuth2 )
-        self.mox.CreateMock( FacebookService )
-
-        resumr.GetAuthService( 'facebook' ).AndReturn( authService )
-
-        self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'something': 'auth_code' }
-                )
-        self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
     def testSystemTestReset(self):
         self.mox.StubOutWithMock( resumr.app, 'SystemTestReset' )

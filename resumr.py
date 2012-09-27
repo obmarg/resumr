@@ -1,13 +1,14 @@
 import markdown
 import shutil
 import sys
-from flask import Flask, render_template, abort, request, session
+from flask import Flask, render_template, abort
 from flask import redirect, url_for
-from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
+from services import GetAuthService, SERVICES_AVALIABLE
 from utils.markdownutils import CleanMarkdownOutput
 import utils.viewutils
 from utils.viewutils import IsLoggedIn, GetDoc
 from views.api import SectionApi, StylesheetApi
+from views import AuthViews
 
 SYSTEMTEST_PORT = 43001
 
@@ -60,6 +61,7 @@ class ResumrApp(Flask):
 
 
 app = ResumrApp()
+app.register_blueprint(AuthViews)
 app.register_blueprint(SectionApi, url_prefix='/api/sections')
 app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
 
@@ -68,7 +70,7 @@ app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
 def index():
     if IsLoggedIn():
         return render_template('index.html')
-    return redirect( url_for( 'Login' ) )
+    return redirect( url_for( 'auth.Login' ) )
 
 #############
 #
@@ -80,7 +82,7 @@ def index():
 @app.route('/render')
 def Render():
     if not IsLoggedIn():
-        return redirect( url_for( 'Login' ) )
+        return redirect( url_for( 'auth.Login' ) )
     d = GetDoc()
     Convert = lambda x: CleanMarkdownOutput(markdown.markdown(x))
     sections = [(s.name, s.CurrentContent()) for i, s in d.CurrentSections()]
@@ -94,59 +96,6 @@ def Render():
             sections=output,
             stylesheet=d.GetStylesheet().CurrentContent()
             )
-
-
-##########
-#
-# Authentication Routes
-#
-##########
-
-
-@app.route('/login')
-def Login():
-    if IsLoggedIn():
-        return redirect( url_for( 'index' ) )
-    # TODO: Add a state into the auth url stuff
-    services = [
-            { 'name': s, 'url': GetAuthService( s ).GetAuthUrl() }
-            for s in SERVICES_AVALIABLE
-            ]
-    return render_template('login.html', services=services)
-
-
-@app.route('/logout')
-def Logout():
-    if IsLoggedIn():
-        del session['regType']
-        del session['email']
-    return redirect( url_for( 'Login' ) )
-
-
-@app.route('/login/auth/<serviceName>')
-def OAuthCallback(serviceName):
-    '''
-    OAuth services should redirect the user to this url after auth
-
-    Params:
-        serviceName     The name of the service the user is authenticating with
-    '''
-    if "error" in request.args:
-        # TODO: Handle errors properly somehow
-        abort( 500 )
-    try:
-        authService = GetAuthService( serviceName )
-        remoteService = authService.ProcessAuthResponse(
-                request.args[ 'code' ]
-                )
-        session[ 'regType' ] = serviceName
-        session[ 'email' ] = remoteService.GetUserEmail()
-        return redirect(url_for( 'index' ))
-    except OAuthException:
-        abort( 500 )
-    except KeyError:
-        abort( 500 )
-    # TODO: Handle the various other error types here
 
 
 #############
