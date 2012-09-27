@@ -1,4 +1,3 @@
-import json
 import markdown
 import shutil
 import sys
@@ -8,7 +7,7 @@ from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
 from utils.markdownutils import CleanMarkdownOutput
 import utils.viewutils
 from utils.viewutils import IsLoggedIn, GetDoc
-from views.api import SectionApi
+from views.api import SectionApi, StylesheetApi
 
 SYSTEMTEST_PORT = 43001
 
@@ -62,6 +61,7 @@ class ResumrApp(Flask):
 
 app = ResumrApp()
 app.register_blueprint(SectionApi, url_prefix='/api/sections')
+app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
 
 
 @app.route("/")
@@ -69,52 +69,6 @@ def index():
     if IsLoggedIn():
         return render_template('index.html')
     return redirect( url_for( 'Login' ) )
-
-#############
-#
-# Stylesheet API
-#
-#############
-
-
-@app.route( '/api/stylesheet', methods=['GET'] )
-def GetStylesheet():
-    '''
-    Gets the current stylesheet contents
-    '''
-    d = GetDoc()
-    stylesheet = d.GetStylesheet()
-    return json.dumps({'content': stylesheet.CurrentContent()})
-
-
-@app.route('/api/stylesheet/history', methods=['GET'])
-def GetStylesheetHistory():
-    '''
-    Gets the history of the stylesheet
-    '''
-    d = GetDoc()
-    stylesheet = d.GetStylesheet()
-    data = [{'content': c} for c in stylesheet.ContentHistory()]
-    return json.dumps(data)
-
-
-@app.route('/api/stylesheet', methods=['PUT'])
-def SetStylesheetContent():
-    '''
-    Sets the current content of the stylesheet
-    '''
-    d = GetDoc()
-    stylesheet = d.GetStylesheet()
-    try:
-        content = request.json['content']
-        if len(content) > app.config['MAX_STYLESHEET_SIZE']:
-            abort( 500 )
-        # TODO: need to validate the content is actually css/less
-    except KeyError:
-        abort( 500 )
-    if stylesheet.CurrentContent() != content:
-        stylesheet.SetContent( content )
-    return "OK"
 
 #############
 #
