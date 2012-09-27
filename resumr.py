@@ -26,7 +26,7 @@ class DefaultConfig(object):
     BYPASS_REPO_NAME = 'test'
     DATA_PATH = None
     SYSTEM_TEST = False
-
+    MAX_STYLESHEET_SIZE = 1024 * 512
 
 class ResumrApp(Flask):
     def __init__(self):
@@ -123,6 +123,7 @@ def ListSections():
     # TODO: Maybe make this return an object
     #       Seem to remember some security warning for
     #       returning lists
+    #       Probably want to use jsonify (?) as well
     return json.dumps( sections )
 
 
@@ -299,9 +300,9 @@ def SetStylesheetContent():
     stylesheet = d.GetStylesheet()
     try:
         content = request.json['content']
+        if len(content) > app.config['MAX_STYLESHEET_SIZE']:
+            abort( 500 )
         # TODO: need to validate the content is actually css/less
-        # TODO: some simple size validation would be good too,
-        #       don't want some sort of DOS style attack w/ massive files
     except KeyError:
         abort( 500 )
     if stylesheet.CurrentContent() != content:

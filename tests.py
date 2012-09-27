@@ -811,6 +811,28 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.assertStatus(rv, 500)
 
+    def testSetStylesheetTooBig(self):
+        '''
+        Testing the set stylesheet content API rejects large stylesheets
+        '''
+        self.mox.StubOutWithMock( resumr, 'GetDoc' )
+        doc = self.mox.CreateMock( Document )
+        resumr.GetDoc().AndReturn( doc )
+
+        style = self.mox.CreateMock( Stylesheet )
+        doc.GetStylesheet().AndReturn( style )
+
+        inputStruct = {'content': 'x' * (1024*513)}
+
+        self.mox.ReplayAll()
+        rv = self.client.put(
+                '/api/stylesheet',
+                data=json.dumps(inputStruct),
+                content_type='application/json',
+                )
+        self.mox.VerifyAll()
+        self.assertStatus(rv, 500)
+
 
 if __name__ == "__main__":
     unittest.main()
