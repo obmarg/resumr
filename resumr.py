@@ -28,6 +28,7 @@ class DefaultConfig(object):
     SYSTEM_TEST = False
     MAX_STYLESHEET_SIZE = 1024 * 512
 
+
 class ResumrApp(Flask):
     def __init__(self):
         super( ResumrApp, self ).__init__(__name__)
@@ -116,9 +117,9 @@ def ListSections():
     ''' Lists the current sections including order '''
     d = GetDoc()
     sections = [ {
-                'name' : s.name,
-                'pos' : i,
-                'content' : s.CurrentContent()
+                'name': s.name,
+                'pos': i,
+                'content': s.CurrentContent()
                 } for i, s in d.CurrentSections() ]
     # TODO: Maybe make this return an object
     #       Seem to remember some security warning for
@@ -235,7 +236,7 @@ def SectionHistory(name):
     for i, d in enumerate( s.ContentHistory() ):
         # This isn't ideal, since the id's will change after another revision
         # is added, but it should do for an initial version
-        data.append( { 'id' : i, 'content' : d } )
+        data.append( { 'id': i, 'content': d } )
     return json.dumps( data )
 
 

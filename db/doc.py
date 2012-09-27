@@ -6,8 +6,8 @@ from .section import Section
 from .stylesheet import Stylesheet
 from .sectionindex import SectionIndex
 from .constants import MASTER_REF, SECTION_REF_PREFIX
-from .constants import SECTION_INDEX_FILENAME, STYLESHEET_REF_PREFIX
-from .errors import ContentNotFound, RepoNotFound
+from .constants import SECTION_INDEX_FILENAME
+from .errors import RepoNotFound
 
 DEFAULT_ROOT_PATH = 'data'
 
@@ -77,15 +77,15 @@ class Document(object):
         Args:
             ref:    The reference name
         '''
-        return refName[ len(SECTION_REF_PREFIX) : ]
+        return refName[ len(SECTION_REF_PREFIX): ]
 
     def _SectionRefs( self ):
         '''
         Gets an iterator over the section refs
         '''
         return ( self._RefNameToSectionName( ref )
-                for ref in self.repo.listall_references()
-                if self._IsSectionRef( ref ) )
+                 for ref in self.repo.listall_references()
+                 if self._IsSectionRef( ref ) )
 
     def Sections( self ):
         '''

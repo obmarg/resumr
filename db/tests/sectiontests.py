@@ -1,7 +1,6 @@
 
 from content import ContentTests
 from .. import section
-from .. import gitutils
 from ..constants import SECTION_REF_PREFIX
 
 
