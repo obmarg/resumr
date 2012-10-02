@@ -1,14 +1,12 @@
-import markdown
 import shutil
 import sys
 from flask import Flask, render_template
 from flask import redirect, url_for
 from services import GetAuthService, SERVICES_AVALIABLE
-from utils.markdownutils import CleanMarkdownOutput
 import utils.viewutils
-from utils.viewutils import IsLoggedIn, GetDoc
 from views.api import SectionApi, StylesheetApi
-from views import AuthViews, SystemTestViews
+from views import AuthViews, SystemTestViews, RenderViews
+from utils.viewutils import IsLoggedIn
 
 SYSTEMTEST_PORT = 43001
 
@@ -65,6 +63,7 @@ app = ResumrApp()
 app.register_blueprint(AuthViews)
 app.register_blueprint(SectionApi, url_prefix='/api/sections')
 app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
+app.register_blueprint(RenderViews)
 
 
 @app.route("/")
@@ -72,31 +71,6 @@ def index():
     if IsLoggedIn():
         return render_template('index.html')
     return redirect( url_for( 'auth.Login' ) )
-
-#############
-#
-# Misc routes
-#
-#############
-
-
-@app.route('/render')
-def Render():
-    if not IsLoggedIn():
-        return redirect( url_for( 'auth.Login' ) )
-    d = GetDoc()
-    Convert = lambda x: CleanMarkdownOutput(markdown.markdown(x))
-    sections = [(s.name, s.CurrentContent()) for i, s in d.CurrentSections()]
-    output = [
-            dict(name=name, content=Convert(content))
-            for name, content in sections
-            ]
-
-    return render_template(
-            'render.html',
-            sections=output,
-            stylesheet=d.GetStylesheet().CurrentContent()
-            )
 
 
 if __name__ == "__main__":

@@ -18,8 +18,6 @@ class ResumrTests(TestCase):
 
     def setUp(self):
         self.mox = mox.Mox()
-        self.mox.StubOutWithMock(resumr.markdown, 'markdown')
-        self.mox.StubOutWithMock(resumr, 'CleanMarkdownOutput')
 
     def tearDown(self):
         self.mox.UnsetStubs()
@@ -57,63 +55,6 @@ class ResumrTests(TestCase):
         resumr.IsLoggedIn().AndReturn( False )
         self.mox.ReplayAll()
         rv = self.client.get('/')
-        self.mox.VerifyAll()
-        self.assertRedirects( rv, '/login' )
-
-    def testRender(self):
-        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
-        self.mox.StubOutWithMock( resumr, 'GetDoc' )
-
-        resumr.IsLoggedIn().AndReturn( True )
-        doc = self.mox.CreateMock( Document )
-        resumr.GetDoc().AndReturn( doc )
-
-        sections = [
-                ( i, self.mox.CreateMock( Section ) ) for i in range( 100 )
-                ]
-
-        doc.CurrentSections().AndReturn( sections )
-
-        expected = []
-        for i, s in sections:
-            s.name = '%i' % i
-            contentStr = 'content' + str(i)
-            s.CurrentContent().AndReturn(contentStr)
-
-        for i, s in sections:
-            contentStr = 'content' + str(i)
-            markdownStr = 'markdown' + str(i)
-            cleanStr = 'clean' + str(i)
-            resumr.markdown.markdown(
-                    contentStr
-                    ).AndReturn( markdownStr )
-            resumr.CleanMarkdownOutput(
-                    markdownStr
-                    ).AndReturn(cleanStr)
-            expected.append(dict(name='%i' % i, content=cleanStr))
-
-        mockStylesheet = self.mox.CreateMock( Stylesheet )
-        doc.GetStylesheet().AndReturn( mockStylesheet )
-        mockStylesheet.CurrentContent().AndReturn('h3 {}')
-
-        self.mox.ReplayAll()
-        rv = self.client.get( '/render' )
-        self.assert200( rv )
-        self.assertTemplateUsed( 'render.html' )
-        self.assertContext( 'sections', expected )
-        self.assertContext( 'stylesheet', 'h3 {}' )
-
-        # Check that the output contains all the expected text
-        for text in expected:
-            self.assertIn( text['content'], rv.data )
-        self.assertIn( 'h3 {}', rv.data )
-
-    def testRenderNotLoggedIn(self):
-        self.mox.StubOutWithMock( resumr, 'IsLoggedIn' )
-        resumr.IsLoggedIn().AndReturn( False )
-
-        self.mox.ReplayAll()
-        rv = self.client.get( '/render' )
         self.mox.VerifyAll()
         self.assertRedirects( rv, '/login' )
 
