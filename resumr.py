@@ -27,15 +27,22 @@ class DefaultConfig(object):
     MAX_STYLESHEET_SIZE = 1024 * 512
 
 
+class SystemTestConfig(DefaultConfig):
+    SERVER_NAME = '127.0.0.1:{0}'.format(SYSTEMTEST_PORT)
+    DEBUG = True
+    SYSTEM_TEST = True
+    DATA_PATH = 'systemtestdata'
+
+
 class ResumrApp(Flask):
-    def __init__(self):
+    def __init__(self, config_object):
         super( ResumrApp, self ).__init__(__name__)
 
-        self.config.from_object(DefaultConfig)
+        self.config.from_object(config_object)
         self.config.from_envvar('RESUMR_CONFIG', silent=True)
 
         # Set up the services
-        oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
+        oAuthUrl = 'http://' + self.config['SERVER_NAME'] + '/login/auth/{0}'
         for name in SERVICES_AVALIABLE:
             GetAuthService(
                     name, self.config,
@@ -44,7 +51,6 @@ class ResumrApp(Flask):
 
     def SystemTestMode(self):
         # Called to activate system test mode for use w/ cucumber
-        app.regsister_blueprint(SystemTestViews, url_prefix='/systemtest')
         self.config[ 'SERVER_NAME' ] = '127.0.0.1:{0}'.format(
                 SYSTEMTEST_PORT
                 )
@@ -54,29 +60,35 @@ class ResumrApp(Flask):
         self.SystemTestReset()
 
     def SystemTestReset(self):
-        shutil.rmtree( app.config[ 'DATA_PATH' ], ignore_errors=True )
+        shutil.rmtree(self.config[ 'DATA_PATH' ], ignore_errors=True)
         self.config[ 'BYPASS_LOGIN' ] = True
 
 
-app = ResumrApp()
-app.register_blueprint(AuthViews)
-app.register_blueprint(SectionApi, url_prefix='/api/sections')
-app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
-app.register_blueprint(RenderViews)
+def MakeApp(systemtest=False):
+    app = ResumrApp(SystemTestConfig if systemtest else DefaultConfig)
+    app.register_blueprint(AuthViews)
+    app.register_blueprint(SectionApi, url_prefix='/api/sections')
+    app.register_blueprint(StylesheetApi, url_prefix='/api/stylesheet')
+    app.register_blueprint(RenderViews)
 
+    if systemtest:
+        app.register_blueprint(SystemTestViews, url_prefix='/systemtest')
 
-@app.route("/")
-def index():
-    if IsLoggedIn():
-        return render_template('index.html')
-    return redirect( url_for( 'auth.Login' ) )
+    @app.route("/")
+    def index():
+        if IsLoggedIn():
+            return render_template('index.html')
+        return redirect( url_for( 'auth.Login' ) )
+
+    return app
 
 
 if __name__ == "__main__":
     args = {}
+    systemtest = False
     if len( sys.argv ) > 1:
         if sys.argv[1] == 'systemtest':
             print "Running in system test mode"
             args['port'] = SYSTEMTEST_PORT
-            app.SystemTestMode()
-    app.run(**args)
+            systemtest = True
+    MakeApp(systemtest).run(**args)

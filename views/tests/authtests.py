@@ -1,5 +1,5 @@
 import mox
-import resumr
+from resumr import MakeApp
 from flask.ext.testing import TestCase
 from views import auth
 from views.auth import session, OAuthException
@@ -10,12 +10,13 @@ from services.facebook import FacebookService
 class TestStylesheetApi(TestCase, mox.MoxTestBase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = MakeApp()
+        app.config['SERVER_NAME'] = 'localhost'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def setUp(self):
         super( TestStylesheetApi, self ).setUp()

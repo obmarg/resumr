@@ -1,5 +1,5 @@
 import mox
-import resumr
+from resumr import MakeApp
 import flask.ext.should_dsl
 from flask.ext.testing import TestCase
 from should_dsl import should
@@ -8,18 +8,19 @@ from views import render
 
 # Let's keep pyflakes happy
 flask.ext.should_dsl
-have_content = be_200 = None
+contain = have_content = be_200 = None
 
 
 class TestRenderViews(TestCase, mox.MoxTestBase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = MakeApp()
+        app.config['SERVER_NAME'] = 'localhost'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def setUp(self):
         super( TestRenderViews, self ).setUp()

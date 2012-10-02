@@ -1,4 +1,4 @@
-import resumr
+from resumr import MakeApp
 import mox
 from flask import session
 from flask.ext.testing import TestCase
@@ -10,12 +10,13 @@ from db import RepoNotFound
 class TestIsLoggedIn(TestCase, mox.MoxTestBase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost:5000'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = MakeApp()
+        app.config['SERVER_NAME'] = 'localhost:5000'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def tearDown(self):
         self.mox.UnsetStubs()
@@ -42,12 +43,13 @@ class TestIsLoggedIn(TestCase, mox.MoxTestBase):
 class TestGetDoc(TestCase, mox.MoxTestBase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost:5000'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = MakeApp()
+        app.config['SERVER_NAME'] = 'localhost:5000'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def tearDown(self):
         self.mox.UnsetStubs()

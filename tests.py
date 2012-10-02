@@ -2,36 +2,25 @@
 import resumr
 import unittest
 import mox
-from db import Section, Document, Stylesheet
 from flask.ext.testing import TestCase
 
 
 class ResumrTests(TestCase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost:5000'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = resumr.MakeApp()
+        app.config['SERVER_NAME'] = 'localhost'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def setUp(self):
         self.mox = mox.Mox()
 
     def tearDown(self):
         self.mox.UnsetStubs()
-
-    def assertRedirects(self, response, location):
-        """
-        Checks if response is an HTTP redirect to the
-        given location.
-
-        :param response: Flask response
-        :param location: relative URL (i.e. without **http://localhost**)
-        """
-        self.assertTrue(response.status_code in (301, 302, 303))
-        self.assertEqual(response.location, "http://localhost:5000" + location)
 
     def assert500(self, response):
         '''

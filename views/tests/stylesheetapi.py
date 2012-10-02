@@ -1,6 +1,6 @@
 
 import mox
-import resumr
+from resumr import MakeApp
 import json
 from flask.ext.testing import TestCase
 from db import Document, Stylesheet
@@ -10,12 +10,13 @@ from views.api import stylesheet
 class TestStylesheetApi(TestCase, mox.MoxTestBase):
 
     def create_app(self):
-        resumr.app.config['SERVER_NAME'] = 'localhost:5000'
-        resumr.app.config['SECRET_KEY'] = 'testsecret'
-        resumr.app.config['TESTING'] = True
-        resumr.app.config['BYPASS_LOGIN'] = False
-        resumr.app.testing = True
-        return resumr.app
+        app = MakeApp()
+        app.config['SERVER_NAME'] = 'localhost:5000'
+        app.config['SECRET_KEY'] = 'testsecret'
+        app.config['TESTING'] = True
+        app.config['BYPASS_LOGIN'] = False
+        app.testing = True
+        return app
 
     def setUp(self):
         super( TestStylesheetApi, self ).setUp()
