@@ -1,14 +1,14 @@
 import markdown
 import shutil
 import sys
-from flask import Flask, render_template, abort
+from flask import Flask, render_template
 from flask import redirect, url_for
 from services import GetAuthService, SERVICES_AVALIABLE
 from utils.markdownutils import CleanMarkdownOutput
 import utils.viewutils
 from utils.viewutils import IsLoggedIn, GetDoc
 from views.api import SectionApi, StylesheetApi
-from views import AuthViews
+from views import AuthViews, SystemTestViews
 
 SYSTEMTEST_PORT = 43001
 
@@ -47,6 +47,7 @@ class ResumrApp(Flask):
 
     def SystemTestMode(self):
         # Called to activate system test mode for use w/ cucumber
+        app.regsister_blueprint(SystemTestViews, url_prefix='/systemtest')
         self.config[ 'SERVER_NAME' ] = '127.0.0.1:{0}'.format(
                 SYSTEMTEST_PORT
                 )
@@ -97,34 +98,6 @@ def Render():
             stylesheet=d.GetStylesheet().CurrentContent()
             )
 
-
-#############
-#
-# System Test Utils
-#
-#############
-
-
-@app.route( '/systemtest/reset' )
-def SystemTestReset():
-    '''
-    Called by system tests to reset all data
-    '''
-    if not app.config[ 'SYSTEM_TEST' ]:
-        abort( 403 )
-    app.SystemTestReset()
-    return "OK"
-
-
-@app.route( '/systemtest/logout' )
-def SystemTestLogout():
-    '''
-    Called by system tests to logout
-    '''
-    if not app.config[ 'SYSTEM_TEST' ]:
-        abort( 403 )
-    app.config[ 'BYPASS_LOGIN' ] = False
-    return "OK"
 
 if __name__ == "__main__":
     args = {}

@@ -117,39 +117,6 @@ class ResumrTests(TestCase):
         self.mox.VerifyAll()
         self.assertRedirects( rv, '/login' )
 
-    def testSystemTestReset(self):
-        self.mox.StubOutWithMock( resumr.app, 'SystemTestReset' )
-
-        resumr.app.SystemTestReset()
-
-        self.mox.ReplayAll()
-        try:
-            resumr.app.config[ 'SYSTEM_TEST' ] = True
-            rv = self.client.get( '/systemtest/reset' )
-            self.mox.VerifyAll()
-            self.assertStatus(rv, 200)
-        finally:
-            resumr.app.config[ 'SYSTEM_TEST' ] = False
-
-    def testSystemTestLogout(self):
-        try:
-            resumr.app.config[ 'SYSTEM_TEST' ] = True
-            resumr.app.config[ 'BYPASS_LOGIN' ] = True
-            rv = self.client.get( '/systemtest/logout' )
-            self.assertStatus(rv, 200)
-            self.assertEqual( resumr.app.config[ 'BYPASS_LOGIN' ], False )
-        finally:
-            resumr.app.config[ 'SYSTEM_TEST' ] = False
-            resumr.app.config[ 'BYPASS_LOGIN' ] = False
-
-    def testSystemTestFail(self):
-        systemTestUrls = (
-                '/systemtest/reset', 'systemtest/logout'
-                )
-        for url in systemTestUrls:
-            rv = self.client.get(url)
-            self.assertStatus(rv, 403)
-
 
 if __name__ == "__main__":
     unittest.main()
