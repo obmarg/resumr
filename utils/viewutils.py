@@ -1,17 +1,6 @@
 
-from flask import abort, session
+from flask import abort, session, current_app
 from db import Document, RepoNotFound
-
-_config = None
-
-
-def SetConfig(config):
-    '''
-    Sets the config variable for use by the functions in
-    this file
-    '''
-    global _config
-    _config = config
 
 
 def IsLoggedIn():
@@ -21,7 +10,7 @@ def IsLoggedIn():
     Returns:
         True if we are, False otherwise
     '''
-    if _config[ 'BYPASS_LOGIN' ]:
+    if current_app.config[ 'BYPASS_LOGIN' ]:
         return True
     if session.new or 'email' not in session:
         return False
@@ -31,8 +20,8 @@ def IsLoggedIn():
 def GetDoc():
     if not IsLoggedIn():
         abort( 401 )
-    if _config[ 'BYPASS_LOGIN' ]:
-        docName = _config[ 'BYPASS_REPO_NAME' ]
+    if current_app.config[ 'BYPASS_LOGIN' ]:
+        docName = current_app.config[ 'BYPASS_REPO_NAME' ]
     else:
         try:
             docName = '{0} - {1}'.format(
@@ -42,8 +31,8 @@ def GetDoc():
             # Seems like we're not logged in after all :(
             abort( 401 )
     try:
-        return Document( docName, rootPath=_config[ 'DATA_PATH' ])
+        return Document(docName, rootPath=current_app.config['DATA_PATH'])
     except RepoNotFound:
         return Document(
-                docName, create=True, rootPath=_config[ 'DATA_PATH' ]
+                docName, create=True, rootPath=current_app.config['DATA_PATH']
                 )

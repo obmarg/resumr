@@ -33,7 +33,6 @@ class ResumrApp(Flask):
 
         self.config.from_object(DefaultConfig)
         self.config.from_envvar('RESUMR_CONFIG', silent=True)
-        utils.viewutils.SetConfig(self.config)
 
         # Set up the services
         oAuthUrl = 'http://' + self.config[ 'SERVER_NAME' ] + '/login/auth/{0}'
