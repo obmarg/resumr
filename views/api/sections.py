@@ -4,11 +4,14 @@ import re
 from flask import Blueprint, abort, request
 from db import ContentNotFound
 from utils.viewutils import GetDoc
-from utils.markdownutils import ValidateMarkdown, MarkdownValidationError
+from utils.markdownutils import ValidateMarkdown
 
 app = Blueprint('section_api', __name__)
 
 SECTION_NAME_REGEXP = re.compile(r'^\w+$')
+
+class InvalidSectionName(Exception):
+    pass
 
 
 @app.route('', methods=['GET'])
@@ -50,28 +53,23 @@ def AddSection():
     d = GetDoc()
     data = request.json
     try:
-        try:
-            name = data[ 'newName' ]
-        except KeyError:
-            # We check data['name'] for the sake of component tests.
-            # The javascript clientside should send via newName,
-            # as otherwise it mistakes the new section for an existing
-            # one, and attempts to PUT
-                name = data[ 'name' ]
-        if not SECTION_NAME_REGEXP.match(name):
-            abort(500)
-        content = data['content']
-        ValidateMarkdown(content)
-        s = d.AddSection(name, content)
-        return json.dumps({
-            'name': s.name,
-            'content': content,
-            'pos': s.GetPosition()
-            })
+        name = data[ 'newName' ]
     except KeyError:
-        abort(500)
-    except MarkdownValidationError:
-        abort(500)
+        # We check data['name'] for the sake of component tests.
+        # The javascript clientside should send via newName,
+        # as otherwise it mistakes the new section for an existing
+        # one, and attempts to PUT
+            name = data[ 'name' ]
+    if not SECTION_NAME_REGEXP.match(name):
+        raise InvalidSectionName(name)
+    content = data['content']
+    ValidateMarkdown(content)
+    s = d.AddSection(name, content)
+    return json.dumps({
+        'name': s.name,
+        'content': content,
+        'pos': s.GetPosition()
+        })
 
 
 @app.route('/<name>', methods=['PUT'])
@@ -93,8 +91,6 @@ def UpdateSection(name):
             section.SetPosition( request.json[ 'pos' ] )
     except ContentNotFound:
         abort(404)
-    except MarkdownValidationError:
-        abort(500)
     return "OK"
 
 
