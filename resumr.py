@@ -3,7 +3,6 @@ import sys
 from flask import Flask, render_template
 from flask import redirect, url_for
 from services import GetAuthService, SERVICES_AVALIABLE
-import utils.viewutils
 from views.api import SectionApi, StylesheetApi
 from views import AuthViews, SystemTestViews, RenderViews
 from utils.viewutils import IsLoggedIn
@@ -39,7 +38,10 @@ class ResumrApp(Flask):
         super( ResumrApp, self ).__init__(__name__)
 
         self.config.from_object(config_object)
-        self.config.from_envvar('RESUMR_CONFIG', silent=True)
+        if config_object.SYSTEM_TEST:
+            self.SystemTestReset()
+        else:
+            self.config.from_envvar('RESUMR_CONFIG', silent=True)
 
         # Set up the services
         oAuthUrl = 'http://' + self.config['SERVER_NAME'] + '/login/auth/{0}'
@@ -48,16 +50,6 @@ class ResumrApp(Flask):
                     name, self.config,
                     oAuthUrl.format( name )
                     )
-
-    def SystemTestMode(self):
-        # Called to activate system test mode for use w/ cucumber
-        self.config[ 'SERVER_NAME' ] = '127.0.0.1:{0}'.format(
-                SYSTEMTEST_PORT
-                )
-        self.config[ 'DEBUG' ] = True
-        self.config[ 'SYSTEM_TEST' ] = True
-        self.config[ 'DATA_PATH' ] = 'systemtestdata'
-        self.SystemTestReset()
 
     def SystemTestReset(self):
         shutil.rmtree(self.config[ 'DATA_PATH' ], ignore_errors=True)
