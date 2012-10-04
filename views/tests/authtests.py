@@ -1,28 +1,11 @@
-import mox
-from resumr import MakeApp
-from flask.ext.testing import TestCase
+from .base import BaseTest
 from views import auth
 from views.auth import session, OAuthException
 from services.auth import BaseOAuth2
 from services.facebook import FacebookService
 
 
-class TestStylesheetApi(TestCase, mox.MoxTestBase):
-
-    def create_app(self):
-        app = MakeApp()
-        app.config['SERVER_NAME'] = 'localhost'
-        app.config['SECRET_KEY'] = 'testsecret'
-        app.config['TESTING'] = True
-        app.config['BYPASS_LOGIN'] = False
-        app.testing = True
-        return app
-
-    def setUp(self):
-        super( TestStylesheetApi, self ).setUp()
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
+class TestStylesheetApi(BaseTest):
 
     def testLogin(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
