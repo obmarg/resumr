@@ -1,8 +1,15 @@
+import flask.ext.should_dsl
+from should_dsl import should
 from .base import BaseTest
+
 from views import auth
-from views.auth import session, OAuthException
-from services.auth import BaseOAuth2
+from services.auth import BaseOAuth2, OAuthException
 from services.facebook import FacebookService
+from flask import session
+
+# Keep pyflakes happy
+be_200 = abort_400 = abort_500 = redirect_to = None
+flask.ext.should_dsl
 
 
 class TestLogin(BaseTest):
@@ -11,18 +18,17 @@ class TestLogin(BaseTest):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( False )
         self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
+        response = self.client.get( '/login' )
         self.mox.VerifyAll()
-        self.assert200( rv )
+        response |should| be_200
         self.assertTemplateUsed( 'login.html' )
 
     def should_redirect_to_index_if_logged_in(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( True )
         self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
+        self.client.get( '/login' ) |should| redirect_to('/')
         self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
 
 
 class TestOAuthCallback(BaseTest):
@@ -38,22 +44,20 @@ class TestOAuthCallback(BaseTest):
 
         self.mox.ReplayAll()
         with self.client as client:
-            rv = client.get(
+            client.get(
                     '/login/auth/facebook',
                     query_string={ 'code': 'auth_code' }
-                    )
+                    ) |should| redirect_to('/')
             self.assertEqual( 'someone@somewhere', session[ 'email' ] )
         self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
 
     def should_handle_user_oauth_error(self):
         self.mox.ReplayAll()
-        rv = self.client.get(
+        self.client.get(
                 '/login/auth/facebook',
                 query_string={ 'error': 'e' }
-                )
+                ) |should| abort_500
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
     def should_handle_failure_to_get_token(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
@@ -66,12 +70,12 @@ class TestOAuthCallback(BaseTest):
                 )
 
         self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'code': 'auth_code' }
-                )
+        with self.assertRaises( OAuthException ):
+            self.client.get(
+                    '/login/auth/facebook',
+                    query_string={ 'code': 'auth_code' }
+                    )
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
     def should_handle_invalid_oauth_redirect(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
@@ -81,10 +85,9 @@ class TestOAuthCallback(BaseTest):
         auth.GetAuthService( 'facebook' ).AndReturn( authService )
 
         self.mox.ReplayAll()
-        rv = self.client.get(
+        self.client.get(
                 '/login/auth/facebook',
                 query_string={ 'something': 'auth_code' }
-                )
+                ) |should| abort_400
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 

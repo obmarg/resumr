@@ -2,7 +2,7 @@
 from flask import Blueprint, abort, request, redirect, url_for, render_template
 from flask import session
 from utils.viewutils import IsLoggedIn
-from services import GetAuthService, SERVICES_AVALIABLE, OAuthException
+from services import GetAuthService, SERVICES_AVALIABLE
 
 app = Blueprint('auth', __name__)
 
@@ -38,17 +38,10 @@ def OAuthCallback(serviceName):
     if "error" in request.args:
         # TODO: Handle errors properly somehow
         abort( 500 )
-    try:
-        authService = GetAuthService( serviceName )
-        remoteService = authService.ProcessAuthResponse(
-                request.args[ 'code' ]
-                )
-        session[ 'regType' ] = serviceName
-        session[ 'email' ] = remoteService.GetUserEmail()
-        return redirect(url_for( 'index' ))
-    except OAuthException:
-        abort( 500 )
-    except KeyError:
-        abort( 500 )
-    # TODO: Handle the various other error types here
-
+    authService = GetAuthService( serviceName )
+    remoteService = authService.ProcessAuthResponse(
+            request.args[ 'code' ]
+            )
+    session[ 'regType' ] = serviceName
+    session[ 'email' ] = remoteService.GetUserEmail()
+    return redirect(url_for( 'index' ))
