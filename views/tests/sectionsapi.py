@@ -1,15 +1,13 @@
 
-import mox
-from resumr import MakeApp
 import json
 import flask.ext.should_dsl
-from flask.ext.testing import TestCase
 from should_dsl import should
 from db import Section, Document
 from db.errors import ContentNotFound
 from views.api import sections
 from views.api.sections import InvalidSectionName
 from utils import MarkdownValidationError
+from .base import BaseTest
 
 # Let's keep pyflakes happy
 flask.ext.should_dsl
@@ -17,16 +15,7 @@ be_200 = abort_500 = None
 have_json = None
 
 
-class SectionApiTestBase(TestCase, mox.MoxTestBase):
-
-    def create_app(self):
-        app = MakeApp()
-        app.config['SERVER_NAME'] = 'localhost'
-        app.config['SECRET_KEY'] = 'testsecret'
-        app.config['TESTING'] = True
-        app.config['BYPASS_LOGIN'] = False
-        app.testing = True
-        return app
+class SectionApiTestBase(BaseTest):
 
     def setUp(self):
         super( SectionApiTestBase, self ).setUp()
@@ -36,9 +25,6 @@ class SectionApiTestBase(TestCase, mox.MoxTestBase):
         # Every test requires these at present
         self.doc = self.mox.CreateMock( Document )
         sections.GetDoc().AndReturn(self.doc)
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
 
 
 class TestSectionList(SectionApiTestBase):
@@ -108,8 +94,6 @@ class TestAddSection(SectionApiTestBase):
         super( TestAddSection, self ).setUp()
         # Pop the request context created by flask-testing
         # since it just messes with the exception throw->catch stuff
-        self._ctx.pop()
-        self._ctx = None
 
     def should_add_a_section(self):
         inputStruct = { 'newName': 'alfred', 'content': 'woot' }
@@ -182,10 +166,6 @@ class TestAddSection(SectionApiTestBase):
 class TestUpdateSection(SectionApiTestBase):
     def setUp(self):
         super(TestUpdateSection, self).setUp()
-        # Pop the request context created by flask-testing
-        # since it just messes with the exception throw->catch stuff
-        self._ctx.pop()
-        self._ctx = None
 
     def should_update_section(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
