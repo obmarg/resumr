@@ -1,8 +1,14 @@
 
 import json
+import flask.ext.should_dsl
+from should_dsl import should
 from .base import BaseTest
 from db import Document, Stylesheet
 from views.api import stylesheet
+
+# Keep pyflakes happy
+return_200 = be_200 = abort_400 = have_json = None
+flask.ext.should_dsl
 
 
 class BaseStylesheetTest(BaseTest):
@@ -25,13 +31,11 @@ class TestGetCurrentStylesheet(BaseStylesheetTest):
         cssContent = 'h1 { text-align: test; }'
         style.CurrentContent().AndReturn( cssContent )
 
-        expected = { 'content': cssContent }
-
         self.mox.ReplayAll()
-        rv = self.client.get( '/api/stylesheet' )
+        response = self.client.get( '/api/stylesheet' )
+        response |should| be_200
+        response |should| have_json(content=cssContent)
         self.mox.VerifyAll()
-        self.assertStatus(rv, 200)
-        self.assertEqual( expected, rv.json )
 
 
 class TestGetStylesheetHistory(BaseStylesheetTest):
@@ -42,13 +46,11 @@ class TestGetStylesheetHistory(BaseStylesheetTest):
         contentHistory = [ 'one', 'two', 'three' ]
         style.ContentHistory().AndReturn( contentHistory )
 
-        expected = [{ 'content': c } for c in contentHistory]
-
         self.mox.ReplayAll()
-        rv = self.client.get( '/api/stylesheet/history' )
+        response = self.client.get( '/api/stylesheet/history' )
+        response |should| be_200
+        response |should| have_json([{ 'content': c } for c in contentHistory])
         self.mox.VerifyAll()
-        self.assertStatus(rv, 200)
-        self.assertEqual( expected, rv.json )
 
 
 class TestSetStylesheetContent(BaseStylesheetTest):
@@ -62,13 +64,12 @@ class TestSetStylesheetContent(BaseStylesheetTest):
         inputStruct = { 'content': 'xyzz' }
 
         self.mox.ReplayAll()
-        rv = self.client.put(
+        self.client.put(
                 '/api/stylesheet',
                 data=json.dumps(inputStruct),
                 content_type='application/json',
-                )
+                ) |should| return_200
         self.mox.VerifyAll()
-        self.assertStatus(rv, 200)
 
     def should_ignore_if_no_change(self):
         style = self.mox.CreateMock( Stylesheet )
@@ -79,13 +80,12 @@ class TestSetStylesheetContent(BaseStylesheetTest):
         inputStruct = { 'content': 'xyzz' }
 
         self.mox.ReplayAll()
-        rv = self.client.put(
+        self.client.put(
                 '/api/stylesheet',
                 data=json.dumps(inputStruct),
                 content_type='application/json',
-                )
+                ) |should| return_200
         self.mox.VerifyAll()
-        self.assertStatus(rv, 200)
 
     def should_error_on_missing_content(self):
         style = self.mox.CreateMock( Stylesheet )
@@ -94,13 +94,13 @@ class TestSetStylesheetContent(BaseStylesheetTest):
         inputStruct = { 'somethingElse': 'xyzz' }
 
         self.mox.ReplayAll()
-        rv = self.client.put(
-                '/api/stylesheet',
-                data=json.dumps(inputStruct),
-                content_type='application/json',
-                )
+        with self.assertRaises(KeyError):
+            self.client.put(
+                    '/api/stylesheet',
+                    data=json.dumps(inputStruct),
+                    content_type='application/json',
+                    )
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
     def should_error_if_stylesheet_too_big(self):
         style = self.mox.CreateMock( Stylesheet )
@@ -109,10 +109,9 @@ class TestSetStylesheetContent(BaseStylesheetTest):
         inputStruct = {'content': 'x' * (1024*513)}
 
         self.mox.ReplayAll()
-        rv = self.client.put(
+        self.client.put(
                 '/api/stylesheet',
                 data=json.dumps(inputStruct),
                 content_type='application/json',
-                )
+                ) |should| abort_400
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
