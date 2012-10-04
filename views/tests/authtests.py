@@ -5,9 +5,9 @@ from services.auth import BaseOAuth2
 from services.facebook import FacebookService
 
 
-class TestStylesheetApi(BaseTest):
+class TestLogin(BaseTest):
 
-    def testLogin(self):
+    def should_display_login_page(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( False )
         self.mox.ReplayAll()
@@ -16,7 +16,7 @@ class TestStylesheetApi(BaseTest):
         self.assert200( rv )
         self.assertTemplateUsed( 'login.html' )
 
-    def testLoginAlready(self):
+    def should_redirect_to_index_if_logged_in(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( True )
         self.mox.ReplayAll()
@@ -24,7 +24,10 @@ class TestStylesheetApi(BaseTest):
         self.mox.VerifyAll()
         self.assertRedirects( rv, '/' )
 
-    def testOAuthCallback(self):
+
+class TestOAuthCallback(BaseTest):
+
+    def should_handle_success(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         service = self.mox.CreateMock( FacebookService )
@@ -43,7 +46,7 @@ class TestStylesheetApi(BaseTest):
         self.mox.VerifyAll()
         self.assertRedirects( rv, '/' )
 
-    def testOAuthError(self):
+    def should_handle_user_oauth_error(self):
         self.mox.ReplayAll()
         rv = self.client.get(
                 '/login/auth/facebook',
@@ -52,7 +55,7 @@ class TestStylesheetApi(BaseTest):
         self.mox.VerifyAll()
         self.assertStatus(rv, 500)
 
-    def testOAuthException(self):
+    def should_handle_failure_to_get_token(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         self.mox.CreateMock( FacebookService )
@@ -70,7 +73,7 @@ class TestStylesheetApi(BaseTest):
         self.mox.VerifyAll()
         self.assertStatus(rv, 500)
 
-    def testOAuthNoCodeParam(self):
+    def should_handle_invalid_oauth_redirect(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         self.mox.CreateMock( FacebookService )
