@@ -1,47 +1,39 @@
-import mox
-from resumr import MakeApp
-from flask.ext.testing import TestCase
+import flask.ext.should_dsl
+from should_dsl import should
+from .base import BaseTest
+
 from views import auth
-from views.auth import session, OAuthException
-from services.auth import BaseOAuth2
+from services.auth import BaseOAuth2, OAuthException
 from services.facebook import FacebookService
+from flask import session
+
+# Keep pyflakes happy
+be_200 = abort_400 = abort_500 = redirect_to = None
+flask.ext.should_dsl
 
 
-class TestStylesheetApi(TestCase, mox.MoxTestBase):
+class TestLogin(BaseTest):
 
-    def create_app(self):
-        app = MakeApp()
-        app.config['SERVER_NAME'] = 'localhost'
-        app.config['SECRET_KEY'] = 'testsecret'
-        app.config['TESTING'] = True
-        app.config['BYPASS_LOGIN'] = False
-        app.testing = True
-        return app
-
-    def setUp(self):
-        super( TestStylesheetApi, self ).setUp()
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
-
-    def testLogin(self):
+    def should_display_login_page(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( False )
         self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
+        response = self.client.get( '/login' )
         self.mox.VerifyAll()
-        self.assert200( rv )
+        response |should| be_200
         self.assertTemplateUsed( 'login.html' )
 
-    def testLoginAlready(self):
+    def should_redirect_to_index_if_logged_in(self):
         self.mox.StubOutWithMock( auth, 'IsLoggedIn' )
         auth.IsLoggedIn().AndReturn( True )
         self.mox.ReplayAll()
-        rv = self.client.get( '/login' )
+        self.client.get( '/login' ) |should| redirect_to('/')
         self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
 
-    def testOAuthCallback(self):
+
+class TestOAuthCallback(BaseTest):
+
+    def should_handle_success(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         service = self.mox.CreateMock( FacebookService )
@@ -52,24 +44,22 @@ class TestStylesheetApi(TestCase, mox.MoxTestBase):
 
         self.mox.ReplayAll()
         with self.client as client:
-            rv = client.get(
+            client.get(
                     '/login/auth/facebook',
                     query_string={ 'code': 'auth_code' }
-                    )
+                    ) |should| redirect_to('/')
             self.assertEqual( 'someone@somewhere', session[ 'email' ] )
         self.mox.VerifyAll()
-        self.assertRedirects( rv, '/' )
 
-    def testOAuthError(self):
+    def should_handle_user_oauth_error(self):
         self.mox.ReplayAll()
-        rv = self.client.get(
+        self.client.get(
                 '/login/auth/facebook',
                 query_string={ 'error': 'e' }
-                )
+                ) |should| abort_500
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
-    def testOAuthException(self):
+    def should_handle_failure_to_get_token(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         self.mox.CreateMock( FacebookService )
@@ -80,14 +70,14 @@ class TestStylesheetApi(TestCase, mox.MoxTestBase):
                 )
 
         self.mox.ReplayAll()
-        rv = self.client.get(
-                '/login/auth/facebook',
-                query_string={ 'code': 'auth_code' }
-                )
+        with self.assertRaises( OAuthException ):
+            self.client.get(
+                    '/login/auth/facebook',
+                    query_string={ 'code': 'auth_code' }
+                    )
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 
-    def testOAuthNoCodeParam(self):
+    def should_handle_invalid_oauth_redirect(self):
         self.mox.StubOutWithMock( auth, 'GetAuthService' )
         authService = self.mox.CreateMock( BaseOAuth2 )
         self.mox.CreateMock( FacebookService )
@@ -95,10 +85,9 @@ class TestStylesheetApi(TestCase, mox.MoxTestBase):
         auth.GetAuthService( 'facebook' ).AndReturn( authService )
 
         self.mox.ReplayAll()
-        rv = self.client.get(
+        self.client.get(
                 '/login/auth/facebook',
                 query_string={ 'something': 'auth_code' }
-                )
+                ) |should| abort_400
         self.mox.VerifyAll()
-        self.assertStatus(rv, 500)
 

@@ -1,32 +1,24 @@
 
-import mox
-from resumr import MakeApp
 import json
 import flask.ext.should_dsl
-from flask.ext.testing import TestCase
 from should_dsl import should
 from db import Section, Document
 from db.errors import ContentNotFound
 from views.api import sections
+from views.api.sections import InvalidSectionName
+from utils import MarkdownValidationError
+from .base import BaseTest
 
 # Let's keep pyflakes happy
 flask.ext.should_dsl
-abort_500 = None
+be_200 = abort_500 = None
+have_json = None
 
 
-class TestSectionsApi(TestCase, mox.MoxTestBase):
-
-    def create_app(self):
-        app = MakeApp()
-        app.config['SERVER_NAME'] = 'localhost:5000'
-        app.config['SECRET_KEY'] = 'testsecret'
-        app.config['TESTING'] = True
-        app.config['BYPASS_LOGIN'] = False
-        app.testing = True
-        return app
+class SectionApiTestBase(BaseTest):
 
     def setUp(self):
-        super( TestSectionsApi, self ).setUp()
+        super( SectionApiTestBase, self ).setUp()
         self.mox.StubOutWithMock(sections, 'ValidateMarkdown')
         self.mox.StubOutWithMock(sections, 'GetDoc' )
 
@@ -34,10 +26,10 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.doc = self.mox.CreateMock( Document )
         sections.GetDoc().AndReturn(self.doc)
 
-    def tearDown(self):
-        self.mox.UnsetStubs()
 
-    def testListSections(self):
+class TestSectionList(SectionApiTestBase):
+
+    def should_list_sections(self):
         # First create some mock sections
         sectionList = []
         for i in range( 100 ):
@@ -69,7 +61,10 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.assert200( rv )
         self.assertEqual( expected, rv.json )
 
-    def testGetSection(self):
+
+class TestGetSection(SectionApiTestBase):
+
+    def should_get_a_section(self):
         s = self.mox.CreateMock( Section )
         s.name = 'wierdly'
         self.doc.FindSection( 'wierdly' ).AndReturn( s )
@@ -84,7 +79,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.assert200( rv )
         self.assertEqual( expected, rv.json )
 
-    def testGetMissingSection(self):
+    def should_raise_404_on_missing(self):
         self.doc.FindSection( 'missing' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
@@ -92,7 +87,15 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert404( rv )
 
-    def testAddSection(self):
+
+class TestAddSection(SectionApiTestBase):
+
+    def setUp(self):
+        super( TestAddSection, self ).setUp()
+        # Pop the request context created by flask-testing
+        # since it just messes with the exception throw->catch stuff
+
+    def should_add_a_section(self):
         inputStruct = { 'newName': 'alfred', 'content': 'woot' }
 
         s = self.mox.CreateMock( Section )
@@ -105,58 +108,66 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
 
         expected = { 'name': 'jones', 'content': 'woot', 'pos': 100 }
 
-        rv = self.client.post(
+        response = self.client.post(
                 '/api/sections',
                 data=json.dumps(inputStruct),
                 content_type='application/json',
                 )
         self.mox.VerifyAll()
-        self.assert200( rv )
-        self.assertEqual( expected, rv.json )
+        response |should| be_200
+        response |should| have_json(expected)
 
-    def doAddSectionFailTest(self, markdownFail=False, **inputStruct):
-        ''' Utility function called by the add section fail tests '''
+    def doAddSectionFailTest(
+            self, exception, markdownFail=False, **inputStruct
+            ):
         if markdownFail:
             sections.ValidateMarkdown(
                     inputStruct['content']
-                    ).AndRaise( sections.MarkdownValidationError )
+                    ).AndRaise( MarkdownValidationError )
 
         self.mox.ReplayAll()
 
-        self.client.post(
-                '/api/sections',
-                data=json.dumps(inputStruct),
-                content_type='application/json'
-                ) |should| abort_500
+        with self.assertRaises(exception):
+            self.client.post(
+                    '/api/sections',
+                    data=json.dumps(inputStruct),
+                    content_type='application/json'
+                    )
         self.mox.VerifyAll()
 
-    def testAddSectionEmptyName(self):
-        ''' Testing adding a section with an empty name '''
-        self.doAddSectionFailTest(newName='', content='woot')
-
-    def testAddSectionNoName(self):
-        ''' Testing adding a section with no name '''
-        self.doAddSectionFailTest(content='woot')
-
-    def testAddSectionNameWithSpaces(self):
-        ''' Testing adding a section with a name with spaces '''
-        self.doAddSectionFailTest(newName='some thing', content='woot')
-
-    def testAddSectionNameWithNonWordChars(self):
-        ''' Testing adding a section with non-word chars '''
-        self.doAddSectionFailTest(newName='some&', content='woot')
-
-    def testAddSectionNoContent(self):
-        ''' Testing adding a section with no content '''
-        self.doAddSectionFailTest(newName='some')
-
-    def testAddSectionRejectedMarkdown(self):
-        ''' Testing adding a section with rejected markdown '''
+    def should_fail_on_empty_name(self):
         self.doAddSectionFailTest(
-                markdownFail=True, newName='some', content='x'
-                )
+            InvalidSectionName, newName='', content='woot'
+            )
 
-    def testUpdateSection(self):
+    def should_fail_on_no_name(self):
+        self.doAddSectionFailTest(KeyError, content='woot')
+
+    def should_fail_if_name_has_spaces(self):
+        self.doAddSectionFailTest(
+            InvalidSectionName, newName='some thing', content='woot'
+            )
+
+    def should_fail_if_name_has_strange_characters(self):
+        self.doAddSectionFailTest(
+            InvalidSectionName, newName='some&', content='woot'
+            )
+
+    def should_fail_if_no_content(self):
+        self.doAddSectionFailTest(KeyError, newName='some')
+
+    def should_fail_if_invalid_markdown(self):
+        self.doAddSectionFailTest(
+            MarkdownValidationError,
+            markdownFail=True, newName='some', content='x'
+            )
+
+
+class TestUpdateSection(SectionApiTestBase):
+    def setUp(self):
+        super(TestUpdateSection, self).setUp()
+
+    def should_update_section(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
 
         s = self.mox.CreateMock( Section )
@@ -177,7 +188,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.assert200( rv )
         # TODO: Might want to verify the content returned as well
 
-    def testUpdateMissingSection(self):
+    def should_404_on_missing(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
 
         self.doc.FindSection( 'jenga' ).AndRaise( ContentNotFound )
@@ -191,7 +202,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert404( rv )
 
-    def testUpdateSectionPosition(self):
+    def should_allow_position_only_updates(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
 
         s = self.mox.CreateMock( Section )
@@ -209,7 +220,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert200( rv )
 
-    def testUpdateSectionContent(self):
+    def should_allow_content_only_updates(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
 
         s = self.mox.CreateMock( Section )
@@ -228,8 +239,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert200( rv )
 
-    def testUpdateSectionContentValidateFail(self):
-        ''' Testing validation failures when updating a section '''
+    def should_reject_invalid_content(self):
         inputStruct = { 'pos': 500, 'content': 'woot' }
 
         s = self.mox.CreateMock( Section )
@@ -237,17 +247,21 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         s.CurrentContent().AndReturn( 'notthesame' )
         sections.ValidateMarkdown(
                 'woot'
-                ).AndRaise( sections.MarkdownValidationError )
+                ).AndRaise( MarkdownValidationError )
 
         self.mox.ReplayAll()
-        self.client.put(
-                '/api/sections/alfred',
-                data=json.dumps(inputStruct),
-                content_type='application/json',
-                ) |should| abort_500
+
+        with self.assertRaises(MarkdownValidationError):
+            self.client.put(
+                    '/api/sections/alfred',
+                    data=json.dumps(inputStruct),
+                    content_type='application/json',
+                    )
         self.mox.VerifyAll()
 
-    def testRemoveSection(self):
+
+class TestRemoveSection(SectionApiTestBase):
+    def should_remove_section(self):
         self.doc.RemoveSection( 'jenkins' )
         self.mox.ReplayAll()
 
@@ -255,7 +269,9 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert200( rv )
 
-    def testSectionHistory(self):
+
+class TestSectionHistoryList(SectionApiTestBase):
+    def should_list_history(self):
         s = self.mox.CreateMock( Section )
         self.doc.FindSection( 'charlie' ).AndReturn( s )
 
@@ -274,7 +290,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.assert200( rv )
         self.assertEqual( expected, rv.json )
 
-    def testSectionHistoryMissingSection(self):
+    def should_404_on_missing(self):
         self.doc.FindSection( 'charlie' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
@@ -282,7 +298,9 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert404( rv )
 
-    def testSelectSectionHistory(self):
+
+class TestSelectSectionHistory(SectionApiTestBase):
+    def should_select_section_history(self):
         s = self.mox.CreateMock( Section )
         self.doc.FindSection( 'zordon' ).AndReturn( s )
 
@@ -300,7 +318,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert200( rv )
 
-    def testSelectSectionHistoryMissingSection(self):
+    def should_404_on_missing_section(self):
         self.doc.FindSection( 'zordon' ).AndRaise( ContentNotFound )
 
         self.mox.ReplayAll()
@@ -308,7 +326,7 @@ class TestSectionsApi(TestCase, mox.MoxTestBase):
         self.mox.VerifyAll()
         self.assert404( rv )
 
-    def testSelectSectionHistoryInvalidId(self):
+    def should_404_on_missing_history(self):
         s = self.mox.CreateMock( Section )
         self.doc.FindSection( 'zordon' ).AndReturn( s )
 

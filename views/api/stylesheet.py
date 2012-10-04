@@ -34,13 +34,10 @@ def SetStylesheetContent():
     '''
     d = GetDoc()
     stylesheet = d.GetStylesheet()
-    try:
-        content = request.json['content']
-        # TODO: need to validate the content is actually css/less
-    except KeyError:
-        abort( 500 )
+    content = request.json['content']
+    # TODO: need to validate the content is actually css/less
     if len(content) > current_app.config['MAX_STYLESHEET_SIZE']:
-        abort( 500 )
+        abort( 400 )
     if stylesheet.CurrentContent() != content:
         stylesheet.SetContent( content )
     return "OK"
