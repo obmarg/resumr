@@ -27,7 +27,7 @@ class TestSystemTestUtils(TestCase, mox.MoxTestBase):
     def tearDown(self):
         self.mox.UnsetStubs()
 
-    def testSystemTestReset(self):
+    def it_has_system_test_reset(self):
         self.app.SystemTestReset = self.mox.CreateMockAnything()
         self.app.SystemTestReset()
 
@@ -40,7 +40,7 @@ class TestSystemTestUtils(TestCase, mox.MoxTestBase):
         finally:
             self.app.config['SYSTEM_TEST'] = False
 
-    def testSystemTestLogout(self):
+    def it_has_system_test_logout(self):
         try:
             self.app.config['SYSTEM_TEST'] = True
             self.app.config['BYPASS_LOGIN'] = True
